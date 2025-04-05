@@ -20,10 +20,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7!2@d^-vlb3v(ltf8has50g%2&d73*da5=0m7*$c@ceu$fu5w#'
+SECRET_KEY = 'django-insecure-)zy+30s^vod+712w5w5u&bj19c8ft=-y%wjjmw#20kk596v2ye'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+# settings.py
+ASGI_APPLICATION = 'turbine.asgi.application'
 
 ALLOWED_HOSTS = []
 
