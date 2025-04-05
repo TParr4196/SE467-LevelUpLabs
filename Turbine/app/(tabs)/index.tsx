@@ -1,11 +1,35 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
+import { Image, StyleSheet, Platform, Button } from 'react-native';
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function HomeScreen() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [error, setError] = useState(null); // Add error state
+
+  const fetchData = () => {
+    setLoading(true); // Start loading
+    setError(null); // Reset any previous errors
+    axios
+      .get('http://10.0.2.2:8000/fastapi')  // Use your local IP address here
+      .then(response => {
+        setData(response.data);
+        setLoading(false);
+      })
+      .catch(error => {
+        setError(error.message);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchData(); // Fetch data on component mount
+  }, []);
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -14,12 +38,23 @@ export default function HomeScreen() {
           source={require('@/assets/images/partial-react-logo.png')}
           style={styles.reactLogo}
         />
-      }>
+      }
+    >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+        {loading ? (
+          <ThemedText>Loading...</ThemedText>  // Show loading indicator
+        ) : error ? (
+          <ThemedText>{error}</ThemedText>  // Show error message if exists
+        ) : (
+          <ThemedText>{JSON.stringify(data)}</ThemedText>
+        )}
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
+
+      {/* Button to re-fetch data */}
+      <Button title="Fetch Data" onPress={fetchData} />
+
+      {/* Other UI components */}
+      {/* <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
           Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
@@ -49,7 +84,7 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
-      </ThemedView>
+      </ThemedView> */}
     </ParallaxScrollView>
   );
 }

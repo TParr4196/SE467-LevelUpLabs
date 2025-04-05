@@ -1,8 +1,17 @@
 # fastapi_app.py
 from fastapi import FastAPI
 from .firebase_config import db  # Import Firestore DB from firebase_config
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 #adapted from chatgpt:
 def get_data():
