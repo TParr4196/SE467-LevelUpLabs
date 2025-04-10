@@ -40,7 +40,7 @@ jobs:
         run: |
           if ! aws s3api head-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1; then
             echo "Bucket does not exist, creating bucket..."
-            aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1
+            aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1
           else
             echo "Bucket already exists."
           fi
