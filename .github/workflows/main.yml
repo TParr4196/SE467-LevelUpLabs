@@ -46,7 +46,7 @@ jobs:
           fi
 
       - name: gunicorn
-        run: gunicorn turbine.wsgi
+        run: gunicorn Backend/turbine.wsgi
 
       # Deploy static files to S3 bucket
       # Deploy static files to S3 bucket without ACL

@@ -20,5 +20,6 @@ from turbine.views import home  # Import the home view
 
 urlpatterns = [
     path('', home, name='home'),  # Add this line to include the home view
+    path('static/', home, name='static'),  # Add this line to include the static view
     path('admin/', admin.site.urls),
 ]
