@@ -34,4 +34,4 @@ jobs:
             AWS_DEFAULT_REGION: us-east-1
             AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
 # This line is what deploys the single page React web app to S3 
-        run: aws s3 sync out/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
+        run: aws s3 sync Backend/staticfiles s3://${{ secrets.AWS_S3_BUCKET }} --delete
