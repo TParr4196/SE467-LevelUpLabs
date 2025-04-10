@@ -27,6 +27,10 @@ def get_data():
         guild_list.append(guild.to_dict())
     return guild_list
 
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
 @app.get("/fastapi")
 def read_root():
     return {"test":get_data()}

@@ -6,7 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Secret key and debug mode for development
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'fake-key-for-dev')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['*']
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
