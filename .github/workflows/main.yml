@@ -32,6 +32,11 @@ jobs:
           python Backend/manage.py collectstatic --noinput
 
       - name: create bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1  # Change region if necessary
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}  # Only required if using temporary credentials
         run: aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1
 
 
