@@ -3,35 +3,45 @@ name: Deploy Static Files to S3
 on:
   push:
     branches:
-      - main  # Trigger workflow on push to main
+      - main  # Trigger workflow on push to the main branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository code
       - name: ✅ Checkout Code
         uses: actions/checkout@v4
 
+      # Set up Python environment
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'  # Adjust based on the version you need
 
+      # Install project dependencies
       - name: 📦 Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt  # Ensure requirements.txt is present
 
+      # Collect static files using Django's collectstatic command
       - name: ⚙️ Run collectstatic
         run: |
           python Backend/manage.py collectstatic --noinput
 
+      # Debug AWS S3 Bucket Name
+      - name: Debug AWS S3 Bucket Name
+        run: echo "Bucket: ${{ secrets.AWS_S3_BUCKET }}"
+
+      # Deploy static files to S3 bucket
       - name: Deploy to S3 bucket
         env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_DEFAULT_REGION: us-east-1
-            AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-# This line is what deploys the single page React web app to S3 
-        run: aws s3 sync Backend/staticfiles s3://${{ secrets.AWS_S3_BUCKET }} --delete
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1  # Change region if necessary
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}  # Only required if using temporary credentials
+        run: |
+          # Ensure static files are in the 'staticfiles' directory (default behavior of collectstatic)
+          aws s3 sync staticfiles/ s3://${{ secrets.AWS_S3_BUCKET }} --delete --acl public-read
