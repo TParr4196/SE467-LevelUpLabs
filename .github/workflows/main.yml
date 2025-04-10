@@ -3,14 +3,11 @@ name: Deploy Static Files to S3
 on:
   push:
     branches:
-      - main  # or whichever branch you want to deploy from
+      - main  # Trigger workflow on push to main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    env:
-      DJANGO_SETTINGS_MODULE: turbine.settings  # adjust if your settings module is different
 
     steps:
       - name: ✅ Checkout Code
@@ -19,12 +16,12 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # or your preferred version
+          python-version: '3.11'  # Ensure this is the right version for your project
 
       - name: 📦 Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r Backend/requirements.txt
+          pip install -r requirements.txt  # Ensure requirements.txt is present in the root
 
       - name: ⚙️ Run Collectstatic
         run: |
@@ -35,8 +32,8 @@ jobs:
         with:
           args: --acl public-read --delete
         env:
-          AWS_S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}  # Reference secret here
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          SOURCE_DIR: staticfiles
+          SOURCE_DIR: staticfiles  # Path to your static files
