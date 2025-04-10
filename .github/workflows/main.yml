@@ -47,12 +47,13 @@ jobs:
 
 
       # Deploy static files to S3 bucket
+      # Deploy static files to S3 bucket without ACL
       - name: Deploy to S3 bucket
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1  # Change region if necessary
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}  # Only required if using temporary credentials
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         run: |
-          # Ensure static files are in the 'staticfiles' directory (default behavior of collectstatic)
-          aws s3 sync Backend/staticfiles s3://${{ secrets.AWS_S3_BUCKET }} --delete --acl public-read
+          aws s3 sync Backend/staticfiles s3://${{ secrets.AWS_S3_BUCKET }} --delete
+
