@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    environment: production
     steps:
       # Checkout the repository code
       - name: ✅ Checkout Code
