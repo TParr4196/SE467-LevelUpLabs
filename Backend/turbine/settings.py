@@ -30,6 +30,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'turbine.urls'
+CSRF_TRUSTED_ORIGINS = ['*']
 
 TEMPLATES = [
     {
