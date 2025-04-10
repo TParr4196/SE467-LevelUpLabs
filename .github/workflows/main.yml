@@ -32,7 +32,7 @@ jobs:
           python Backend/manage.py collectstatic --noinput
 
       - name: create bucket
-        run: aws s3api create-bucket --bucket {{ secrets.AWS_S3_BUCKET }} --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1
+        run: aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1
 
 
       # Deploy static files to S3 bucket
