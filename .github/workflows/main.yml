@@ -33,7 +33,7 @@ jobs:
 
       # Debug AWS S3 Bucket Name
       - name: Debug AWS S3 Bucket Name
-        run: echo "Bucket: ${{ secrets.AWS_S3_BUCKET }}"
+        run: echo "Bucket ${{ secrets.AWS_S3_BUCKET }}"
 
       # Deploy static files to S3 bucket
       - name: Deploy to S3 bucket
