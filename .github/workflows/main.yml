@@ -31,10 +31,6 @@ jobs:
         run: |
           python Backend/manage.py collectstatic --noinput
 
-      # Debug AWS S3 Bucket Name
-      - name: Debug AWS S3 Bucket Name
-        run: echo "Bucket ${{ secrets.AWS_S3_BUCKET }}"
-
       # Deploy static files to S3 bucket
       - name: Deploy to S3 bucket
         env:
@@ -44,4 +40,4 @@ jobs:
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}  # Only required if using temporary credentials
         run: |
           # Ensure static files are in the 'staticfiles' directory (default behavior of collectstatic)
-          aws s3 sync Backend/staticfiles/admin s3://${{ secrets.AWS_S3_BUCKET }} --delete --acl public-read
+          aws s3 sync Backend/staticfiles s3://${{ secrets.AWS_S3_BUCKET }} --delete --acl public-read
