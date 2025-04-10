@@ -1,3 +1,4 @@
-django-admin
-fastapi
-uvicorn
+Django==5.2
+django-admin==5.2  # Optional, usually included with Django
+fastapi==0.95.1
+uvicorn==0.23.2
