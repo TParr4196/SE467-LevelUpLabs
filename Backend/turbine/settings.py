@@ -30,7 +30,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'turbine.urls'
-CSRF_TRUSTED_ORIGINS = ['*']
 
 TEMPLATES = [
     {
@@ -78,6 +77,7 @@ AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 # Static files settings for S3 and local collection
 STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+CSRF_TRUSTED_ORIGINS = [STATIC_URL, 'http://127.0.0.1:8000']
 
 # Local static files collection directory
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # This is the local folder
