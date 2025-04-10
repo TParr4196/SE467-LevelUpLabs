@@ -43,7 +43,6 @@ jobs:
           aws s3api create-bucket \
             --bucket ${{ secrets.AWS_S3_BUCKET }} \
             --region us-east-1 \
-            --create-bucket-configuration
 
           # Allow public access by disabling block public ACLs
           aws s3api put-bucket-policy \
