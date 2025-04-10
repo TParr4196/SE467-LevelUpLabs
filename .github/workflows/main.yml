@@ -37,7 +37,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1  # Change region if necessary
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}  # Only required if using temporary credentials
-        run: aws s3api create-bucket --bucket YOUR_BUCKET_NAME --region us-east-1 || echo "Bucket already exists"
+        run: aws s3api create-bucket --bucket YOUR_BUCKET_NAME --region us-east-1
 
       # Deploy static files to S3 bucket
       - name: Deploy to S3 bucket
