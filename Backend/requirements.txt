@@ -1,0 +1,6 @@
+django-admin
+fastapi
+uvicorn
+django-storages
+boto3
+python-dotenv
