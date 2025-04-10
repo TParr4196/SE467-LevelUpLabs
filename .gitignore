@@ -1,2 +1,4 @@
 firebase_credentials.json
 __pycache__
+staticfiles
+db.sqlite3
