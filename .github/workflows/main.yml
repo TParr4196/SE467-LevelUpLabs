@@ -21,20 +21,14 @@ jobs:
         with:
           python-version: '3.11'  # or your preferred version
 
-      - name: cd to Backend folder
-        run: cd Backend
-
-      - name: cat
-        run: ls
-
       - name: 📦 Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r Backend/requirements.txt
 
       - name: ⚙️ Run Collectstatic
         run: |
-          python manage.py collectstatic --noinput
+          python Backend/manage.py collectstatic --noinput
 
       - name: ☁️ Upload to S3
         uses: jakejarvis/s3-sync-action@master
