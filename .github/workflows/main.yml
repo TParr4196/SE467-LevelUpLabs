@@ -45,9 +45,6 @@ jobs:
             echo "Bucket already exists."
           fi
 
-      - name: gunicorn
-        run: gunicorn Backend/turbine.wsgi
-
       # Deploy static files to S3 bucket
       # Deploy static files to S3 bucket without ACL
       - name: Deploy to S3 bucket
