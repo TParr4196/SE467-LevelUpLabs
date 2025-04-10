@@ -39,35 +39,11 @@ jobs:
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         run: |
           if ! aws s3api head-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1; then
-          echo "Bucket does not exist, creating bucket..."
-          aws s3api create-bucket \
-            --bucket ${{ secrets.AWS_S3_BUCKET }} \
-            --region us-east-1 \
-
-          # Allow public access by disabling block public ACLs
-          aws s3api put-bucket-policy \
-            --bucket ${{ secrets.AWS_S3_BUCKET }} \
-            --policy '{
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "PublicReadGetObject",
-                  "Effect": "Allow",
-                  "Principal": "*",
-                  "Action": "s3:GetObject",
-                  "Resource": "arn:aws:s3:::${{ secrets.AWS_S3_BUCKET }}/*"
-                }
-              ]
-            }'
-
-          # Disable Block Public Access settings on the bucket
-          aws s3api put-bucket-acl \
-            --bucket ${{ secrets.AWS_S3_BUCKET }} \
-            --acl public-read
+            echo "Bucket does not exist, creating bucket..."
+            aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1
           else
             echo "Bucket already exists."
           fi
-
 
 
       # Deploy static files to S3 bucket
