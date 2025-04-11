@@ -16,10 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from turbine.views import home  # Import the home view
+from turbine.views import StaticIndexRedirectView # IndexView  # Import the home view
 
 urlpatterns = [
-    path('', home, name='home'),  # Add this line to include the home view
-    path('static/', home, name='static'),  # Add this line to include the static view
+    # path('', IndexView.as_view(), name='home'),  # Add this line to include the home view
+    # path('static/', IndexView.as_view(), name='static'),  # Add this line to include the static view
+    path('', StaticIndexRedirectView.as_view(), name='static'),  # Redirect root to static index.html
     path('admin/', admin.site.urls),
 ]
