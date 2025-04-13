@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from turbine.views import StaticIndexRedirectView # IndexView  # Import the home view
 
 urlpatterns = [
@@ -23,4 +23,5 @@ urlpatterns = [
     # path('static/', IndexView.as_view(), name='static'),  # Add this line to include the static view
     path('', StaticIndexRedirectView.as_view(), name='static'),  # Redirect root to static index.html
     path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
 ]
