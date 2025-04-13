@@ -19,21 +19,17 @@ Unix/MacOS:                                                         <br />
 
 ### Start the virtural environment
 Windows:                                                            <br />
-&nbsp;&nbsp;&nbsp;    `.venv\Scripts\activate.bat`                  <br />
+&nbsp;&nbsp;&nbsp;    `.venv\Scripts\activate`                      <br />
 Unix/MacOS:                                                         <br />
 &nbsp;&nbsp;&nbsp;    `source .venv/bin/activate`                   <br />
 
 If the virtural environment has started, you should see something like this in the terminal: <br />
 &nbsp;&nbsp;&nbsp; `(.venv.) C:\Users\Your Name> `
 <br /> <br />
-## Install Django
-Windows: 
-- `py -m pip install Django`
-- `python -m pip install django-cors-headers`
 
-Unix?MacOS:
-- `python -m pip install Django`  
-- `python -m pip install django-cors-headers`
+## Install Django
+
+`pip install -r requirements.txt`
 
 Verify that Django was installed
 - `django-admin --version`
