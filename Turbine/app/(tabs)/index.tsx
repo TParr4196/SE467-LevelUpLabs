@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import React from 'react';
 
 export default function HomeScreen() {
   const [data, setData] = useState(null);

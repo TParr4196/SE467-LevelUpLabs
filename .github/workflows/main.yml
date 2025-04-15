@@ -14,22 +14,20 @@ jobs:
       - name: ✅ Checkout Code
         uses: actions/checkout@v4
 
-      # Set up Python environment
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
+      # Step 2: Set up Node.js (adjust the version as necessary)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          python-version: '3.11'  # Adjust based on the version you need
+          node-version: '16'  # Adjust the Node.js version as necessary
 
-      # Install project dependencies
-      - name: 📦 Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt  # Ensure requirements.txt is present
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
 
-      # Collect static files using Django's collectstatic command
-      - name: ⚙️ Run collectstatic
+      - name: create web app files
         run: |
-          python Backend/manage.py collectstatic --noinput
+          cd Turbine
+          npx expo export --platform web
 
       - name: Create bucket if it doesn't exist
         env:
@@ -55,4 +53,21 @@ jobs:
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         run: |
           aws s3 sync Backend/staticfiles s3://${{ secrets.AWS_S3_BUCKET }} --delete
+
+      # # Set up Python environment
+      # - name: 🐍 Set up Python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: '3.11'  # Adjust based on the version you need
+
+      # # Install project dependencies
+      # - name: 📦 Install Dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install -r requirements.txt  # Ensure requirements.txt is present
+
+      # # Collect static files using Django's collectstatic command
+      # - name: ⚙️ Run collectstatic
+      #   run: |
+      #     python Backend/manage.py collectstatic --noinput
 
