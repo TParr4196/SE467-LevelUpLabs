@@ -25,6 +25,9 @@ jobs:
         run: |
           cd Turbine
           npm install
+          npm install -g @expo/cli
+          npm install expo
+
 
       - name: create web app files
         run: |

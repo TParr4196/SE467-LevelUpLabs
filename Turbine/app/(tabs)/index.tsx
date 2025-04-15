@@ -4,27 +4,27 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useState, useEffect } from 'react';
-// import axios from 'axios';
+import axios from 'axios';
 import React from 'react';
 
 export default function HomeScreen() {
-  // const [data, setData] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true); // Add loading state
   const [error, setError] = useState(null); // Add error state
 
   const fetchData = () => {
     setLoading(true); // Start loading
     setError(null); // Reset any previous errors
-    // axios
-    //   .get('http://10.0.2.2:8000/fastapi')  // Use your local IP address here
-    //   .then(response => {
-    //     setData(response.data);
-    //     setLoading(false);
-    //   })
-    //   .catch(error => {
-    //     setError(error.message);
-    //     setLoading(false);
-    //   });
+    axios
+      .get('http://10.0.2.2:8000/fastapi')  // Use your local IP address here
+      .then(response => {
+        setData(response.data);
+        setLoading(false);
+      })
+      .catch(error => {
+        setError(error.message);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
