@@ -22,7 +22,9 @@ jobs:
 
       # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: |
+          cd Turbine
+          npm install
 
       - name: create web app files
         run: |
