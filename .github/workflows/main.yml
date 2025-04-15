@@ -31,7 +31,6 @@ jobs:
 
       - name: create web app files
         run: |
-          cd Turbine
           npx expo export --platform web
 
       - name: Create bucket if it doesn't exist
