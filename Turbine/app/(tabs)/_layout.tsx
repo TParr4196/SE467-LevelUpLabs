@@ -40,6 +40,17 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
+      <Tabs>
+        <Tabs.Screen name="home" options={{ title: 'Home' }} />
+        <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+        <Tabs.Screen
+          name="game-library"
+          options={{
+            title: 'Game Library',
+            tabBarIcon: () => null, // Add icon from @expo/vector-icons if you want
+          }}
+        />
+      </Tabs>
     </Tabs>
   );
 }
