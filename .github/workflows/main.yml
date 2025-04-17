@@ -34,18 +34,18 @@ jobs:
           cd Turbine
           npx expo export --platform web
 
-      - name: Create bucket if it doesn't exist
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-2
-        run: |
-          if ! aws s3api head-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1; then
-            echo "Bucket does not exist, creating bucket..."
-            aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1
-          else
-            echo "Bucket already exists."
-          fi
+      # - name: Create bucket if it doesn't exist
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_DEFAULT_REGION: us-east-2
+      #   run: |
+      #     if ! aws s3api head-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1; then
+      #       echo "Bucket does not exist, creating bucket..."
+      #       aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1
+      #     else
+      #       echo "Bucket already exists."
+      #     fi
 
       # Deploy static files to S3 bucket
       # Deploy static files to S3 bucket without ACL
@@ -57,20 +57,32 @@ jobs:
         run: |
           aws s3 sync Turbine/dist s3://${{ secrets.AWS_S3_BUCKET }} --delete
 
-      # # Set up Python environment
-      # - name: 🐍 Set up Python
-      #   uses: actions/setup-python@v5
-      #   with:
-      #     python-version: '3.11'  # Adjust based on the version you need
+      # Set up Python environment
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # Adjust based on the version you need
 
-      # # Install project dependencies
-      # - name: 📦 Install Dependencies
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     pip install -r requirements.txt  # Ensure requirements.txt is present
+      - name: Zip Lambda Function
+        run: |
+          zip -j lambda.zip Backend/my_lambda.py
 
-      # # Collect static files using Django's collectstatic command
-      # - name: ⚙️ Run collectstatic
-      #   run: |
-      #     python Backend/manage.py collectstatic --noinput
+      - name: Install dependencies and zip Lambda
+        run: |
+          mkdir -p package
+          pip install -r requirements.txt -t package/
+          cp Backend/my_lambda.py package/
+          cd package && zip -r ../lambda.zip .
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Deploy to AWS Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name your-lambda-function-name \
+            --zip-file fileb://lambda.zip
