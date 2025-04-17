@@ -65,13 +65,13 @@ jobs:
 
       - name: Zip Lambda Function
         run: |
-          zip -j lambda.zip Backend/my_lambda.py
+          zip -j lambda.zip Backend/lambda.py
 
       - name: Install dependencies and zip Lambda
         run: |
           mkdir -p package
           pip install -r requirements.txt -t package/
-          cp Backend/my_lambda.py package/
+          cp Backend/lambda.py package/
           cd package && zip -r ../lambda.zip .
 
       - name: Configure AWS credentials
