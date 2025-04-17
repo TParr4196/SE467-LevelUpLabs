@@ -12,6 +12,10 @@ def lambda_handler(event, context):
     statusCode = 200
 
     try:
+        if event['routeKey'] == "GET /":
+            body = {
+                "message": "Hello from github actions!",
+            }
         if event['routeKey'] == "DELETE /items/{id}":
             table.delete_item(
                 Key={
