@@ -14,48 +14,48 @@ jobs:
       - name: ✅ Checkout Code
         uses: actions/checkout@v4
 
-      # # Step 2: Set up Node.js (adjust the version as necessary)
-      # - name: Set up Node.js
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: '18'  # Adjust the Node.js version as necessary
+      # Step 2: Set up Node.js (adjust the version as necessary)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Adjust the Node.js version as necessary
 
-      # # Step 3: Install dependencies
-      # - name: Install dependencies
-      #   run: |
-      #     cd Turbine
-      #     npm install
-      #     npm install -g @expo/cli
-      #     npm install expo
-      #     npm install web-streams-polyfill
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          cd Turbine
+          npm install
+          npm install -g @expo/cli
+          npm install expo
+          npm install web-streams-polyfill
 
-      # - name: create web app files
-      #   run: |
-      #     cd Turbine
-      #     npx expo export --platform web
+      - name: create web app files
+        run: |
+          cd Turbine
+          npx expo export --platform web
 
-      # # - name: Create bucket if it doesn't exist
-      # #   env:
-      # #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      # #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      # #     AWS_DEFAULT_REGION: us-east-2
-      # #   run: |
-      # #     if ! aws s3api head-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1; then
-      # #       echo "Bucket does not exist, creating bucket..."
-      # #       aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1
-      # #     else
-      # #       echo "Bucket already exists."
-      # #     fi
-
-      # # Deploy static files to S3 bucket
-      # # Deploy static files to S3 bucket without ACL
-      # - name: Deploy to S3 bucket
+      # - name: Create bucket if it doesn't exist
       #   env:
       #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       #     AWS_DEFAULT_REGION: us-east-2
       #   run: |
-      #     aws s3 sync Turbine/dist s3://${{ secrets.AWS_S3_BUCKET }} --delete
+      #     if ! aws s3api head-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1; then
+      #       echo "Bucket does not exist, creating bucket..."
+      #       aws s3api create-bucket --bucket ${{ secrets.AWS_S3_BUCKET }} --region us-east-1
+      #     else
+      #       echo "Bucket already exists."
+      #     fi
+
+      # Deploy static files to S3 bucket
+      # Deploy static files to S3 bucket without ACL
+      - name: Deploy to S3 bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-2
+        run: |
+          aws s3 sync Turbine/dist s3://${{ secrets.AWS_S3_BUCKET }} --delete
 
       # Set up Python environment
       - name: 🐍 Set up Python
