@@ -3,7 +3,7 @@ name: Deploy Static Files to S3
 on:
   push:
     branches:
-      - main  # Trigger workflow on push to the main branch
+      - deployment  # Trigger workflow on push to the main branch
 
 jobs:
   deploy:
@@ -55,7 +55,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-2
         run: |
-          aws s3 sync Turbine/dist s3://${{ secrets.AWS_S3_BUCKET }} --acl public-read --delete
+          aws s3 sync Turbine/dist s3://${{ secrets.AWS_S3_BUCKET }} --delete
 
       # # Set up Python environment
       # - name: 🐍 Set up Python
