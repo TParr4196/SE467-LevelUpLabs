@@ -14,7 +14,7 @@ def lambda_handler(event, context):
     try:
         if event['routeKey'] == "GET /test":
             body = {
-                "message": "Hello from github actions!",
+                "message": "Hello from github actions! Checking if API autoupdates.",
             }
         if event['routeKey'] == "DELETE /items/{id}":
             table.delete_item(
