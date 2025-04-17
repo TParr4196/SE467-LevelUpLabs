@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     statusCode = 200
 
     try:
-        if event['routeKey'] == "GET /":
+        if event['routeKey'] == "GET /test":
             body = {
                 "message": "Hello from github actions!",
             }
