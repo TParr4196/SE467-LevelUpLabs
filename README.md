@@ -43,3 +43,5 @@ Starting Server:
 
 
 # React Frontend
+- From `/Turbine`
+- `npx expo start`

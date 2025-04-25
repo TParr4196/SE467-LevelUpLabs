@@ -2,33 +2,39 @@ import axios from 'axios';
 
 const API_BASE_URL = 'https://xyxhy4n2o4.execute-api.us-east-2.amazonaws.com'; // Replace with your AWS API endpoint
 
-
-// GET: [userid, userid...] -> {id:{name:<>, img:<>}, id: ...}
-// export const getUsersDetails = async (userIds: number[]) => {
+// GET: /users/userId/games -> {userId:<>, FW(from where):<>} -> {gameId:{gameName:<>, img:<>}, gameId: ...}
+// ***** I feel like this one is not necessary. We can get the user's games list, then request those specific games from the /games/gameId endpoint ******
+// export const getUserGames = async (userId: number, fromWhere: string) => {
 //   try {
-//     const response = await axios.get(`${API_BASE_URL}/users`, { params: { userIds } });
+//     const response = await axios.get(`${API_BASE_URL}/users/${userId}/games`, { params: { FW: fromWhere } });
 //     return response.data;
 //   } catch (error) {
-//     console.error('Error fetching user details:', error);
+//     console.error('Error fetching user games:', error);
 //     throw error;
 //   }
 // };
 
-// GET: /users/userId/games -> {userId:<>, FW(from where):<>} -> {gameId:{gameName:<>, img:<>}, gameId: ...}
-export const getUserGames = async (userId: number, fromWhere: string) => {
+// GET: /users [userid, userid...] -> [{userId: <>, name:<>, gamesOwned:<>}, {userId: <>, ...}]
+export const getUsers = async (userIds: string[]) => {
+  console.log(`userIds: ${userIds}`); //                                                                  <=============   For debugging purposes, you can remove this later
   try {
-    const response = await axios.get(`${API_BASE_URL}/users/${userId}/games`, { params: { FW: fromWhere } });
+    const response = await axios.get(`${API_BASE_URL}/users`, {
+      params: { ids: userIds.join(',') }, 
+    });
     return response.data;
   } catch (error) {
-    console.error('Error fetching user games:', error);
+    console.error('Error fetching user details:', error);
     throw error;
   }
 };
 
-// GET: /games/gameId -> {gameId: {gameName:<>, rating:<>, tags:<>, playerCount:<>, playTime:<>, img:<>}}
-export const getGameDetails = async (gameId: number) => {
+// GET: /games [gameId, gameId, ...] -> [{gameId:<>, name:<>, genres:[<>], rating:<>, imageUrl:<>, averagePlaytime:<>, recommendedPlayers:<>}, {gameId:<>, ...}]
+export const getGames = async (gameIds: string[]) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/games/${gameId}`);
+    // const response = await axios.get(`${API_BASE_URL}/games`);
+    const response = await axios.get(`${API_BASE_URL}/games`, {
+      params: { ids: gameIds.join(',') }, 
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching game details:', error);
@@ -112,18 +118,3 @@ export const voteForGame = async (sessionId: number, gameId: number) => {
     throw error;
   }
 };
-
-
-
-export const getUser = async (userIds: string[]) => {
-    console.log(`userIds: ${userIds}`); // For debugging purposes, you can remove this later
-    try {
-      const response = await axios.get(`${API_BASE_URL}/users`, {
-        params: { ids: userIds.join(',') }, // Join userIds into a comma-separated string
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching user details:', error);
-      throw error;
-    }
-  };
