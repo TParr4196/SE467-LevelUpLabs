@@ -48,12 +48,5 @@ Starting Server:
 - `py manage.py runserver`
 
 # React Frontend
-
-Use ONLY NPM
-
-Navigate to `/Turbine` folder
-`npm install`
-
-If you already have issues, delete node_modules/ , .expo/, and package-lock.json. Then re-run `npm install`
-
-To run it, do `npx expo start --web`
+- From `/Turbine`
+- `npx expo start`
