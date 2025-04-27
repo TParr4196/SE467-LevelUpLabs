@@ -40,7 +40,9 @@ Verify that Django was installed
 - `django-admin --version`
 
 --Install Dependencies--
-TODO
+
+npm install react-native-paper react-native-vector-icons
+
 
 Starting Server:
 
