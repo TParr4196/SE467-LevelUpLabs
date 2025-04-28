@@ -15,6 +15,7 @@ def lambda_handler(event, context):
     statusCode = 200
 
     try:
+        # Get all the users from a list of users
         if event['routeKey'] == "GET /users":
             # Extract user IDs from query parameters
             user_ids = event.get('queryStringParameters', {}).get('ids', '')
@@ -50,6 +51,7 @@ def lambda_handler(event, context):
                     })
             body = users
         
+        # Get all the games from a list of games
         elif event['routeKey'] == "GET /games":
             # Extract game IDs from query parameters
             game_ids = event.get('queryStringParameters', {}).get('ids', '')
@@ -80,6 +82,105 @@ def lambda_handler(event, context):
                     })
 
             body = games
+        
+        # Add a game to a user's personal collection
+        elif event['routeKey'] == "POST /users/{userId}/games":
+            # Extract userId from path parameters
+            user_id = event['pathParameters'].get('userId')
+            if not user_id:
+                raise KeyError("Missing 'userId' path parameter")
+
+            # Parse the request body
+            request_body = json.loads(event.get('body', '{}'))
+            game_name = request_body.get('name')
+            game_uuid = request_body.get('uuid')
+
+            if not game_name and not game_uuid:
+                raise KeyError("Missing 'name' or 'uuid' in request body")
+
+            # Find the game in the games table
+            game_item = None
+            if game_uuid:
+                # Query by UUID
+                response = games_table.get_item(
+                    Key={
+                        'gameId': game_uuid
+                    }
+                )
+                game_item = response.get("Item")
+            elif game_name:
+                # Query by name (scan since name is not a key)
+                response = games_table.scan(
+                    FilterExpression=boto3.dynamodb.conditions.Attr('name').eq(game_name)
+                )
+                items = response.get("Items", [])
+                if items:
+                    game_item = items[0]  # Assume the first match is the correct one
+
+            if not game_item:
+                raise KeyError("Game not found")
+
+            # Perform the two PutItem operations sequentially
+            try:
+                # Add the game to the user's collection
+                user_games_map_table.put_item(
+                    Item={
+                        'entityId': user_id,
+                        'relatedId': game_item['gameId']
+                    }
+                )
+
+                # Add the user to the game's collection
+                user_games_map_table.put_item(
+                    Item={
+                        'entityId': game_item['gameId'],
+                        'relatedId': user_id
+                    }
+                )
+
+                body = {
+                    "message": f"Game '{game_item['name']}' (UUID: {game_item['gameId']}) added to user {user_id}'s collection."
+                }
+
+            except Exception as e:
+                print(f"Error during PutItem operations: {e}")
+                statusCode = 500
+                body = f"Error: Failed to add game to user's collection. {str(e)}"
+        
+        # Delete a game from a user's personal collection
+        elif event['routeKey'] == "DELETE /users/{userId}/games/{gameId}":
+            # Extract userId and gameId from path parameters
+            user_id = event['pathParameters'].get('userId')
+            game_id = event['pathParameters'].get('gameId')
+
+            if not user_id or not game_id:
+                raise KeyError("Missing 'userId' or 'gameId' path parameter")
+
+            try:
+                # Delete the game from the user's collection
+                user_games_map_table.delete_item(
+                    Key={
+                        'entityId': user_id,
+                        'relatedId': game_id
+                    }
+                )
+
+                # Delete the user from the game's collection
+                user_games_map_table.delete_item(
+                    Key={
+                        'entityId': game_id,
+                        'relatedId': user_id
+                    }
+                )
+
+                body = {
+                    "message": f"Game (UUID: {game_id}) removed from user {user_id}'s collection."
+                }
+            except Exception as e:
+                print(f"Error during DeleteItem operations: {e}")
+                statusCode = 500
+                body = f"Error: Failed to delete game from user's collection. {str(e)}"
+
         # if event['routeKey'] == "GET /test":
         #     body = {
         #         "message": "Hello from github actions! Checking if API autoupdates.",
