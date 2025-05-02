@@ -1,5 +1,5 @@
 // components/GameCard.tsx
-import { Image, Text, StyleSheet, Pressable, View } from 'react-native';
+import { ImageBackground, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import React from 'react';
 
@@ -8,10 +8,14 @@ export function Card({ title, cover, id }: { title: string; cover: string; id: s
 
     return (
         <Pressable onPress={() => router.push(`/game-library/${id}`)} style={styles.card}>
-            <View style={styles.imageContainer}>
-                <Image source={{ uri: cover }} style={styles.image} resizeMode="contain" />
-            </View>
-            <Text style={styles.title}>{title}</Text>
+            <ImageBackground
+                source={{ uri: cover }}
+                style={styles.imageBackground}
+                imageStyle={styles.imageBorder}
+                resizeMode="cover" // Ensures the image covers the entire card
+            >
+                <Text style={styles.title}>{title}</Text>
+            </ImageBackground>
         </Pressable>
     );
 }
@@ -19,28 +23,28 @@ export function Card({ title, cover, id }: { title: string; cover: string; id: s
 const styles = StyleSheet.create({
     card: {
         width: 180, // Fixed width
-        height: 220, // Slightly taller to accommodate the title
+        height: 270, // Adjusted height to match the 600x900 aspect ratio
         borderRadius: 12,
         overflow: 'hidden',
         margin: 6, // Add some spacing between cards
-        backgroundColor: '#fff', // Add a background color for better contrast
-        alignItems: 'center',
     },
-    imageContainer: {
-        width: '100%',
-        height: 180, // Reserve most of the card for the image
-        justifyContent: 'center',
-        alignItems: 'center',
+    imageBackground: {
+        flex: 1,
+        justifyContent: 'flex-end', // Position the title at the bottom
+        padding: 12,
     },
-    image: {
-        width: '100%',
-        height: '100%',
+    imageBorder: {
+        borderRadius: 12, // Ensure the image respects the card's rounded corners
     },
     title: {
-        color: '#000',
+        color: '#fff',
         fontWeight: 'bold',
-        fontSize: 14,
+        fontSize: 16,
+        backgroundColor: 'rgba(0,0,0,0.5)', // Add a semi-transparent background for better readability
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 6,
+        overflow: 'hidden',
         textAlign: 'center',
-        marginTop: 4,
     },
 });

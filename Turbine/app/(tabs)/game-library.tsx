@@ -18,8 +18,12 @@ export default function GameLibraryScreen() {
             try {
                 // Example game IDs to fetch from the backend
                 const gameIds = [
+                    "2ce51d75-0804-4b1f-bd29-3a6b51a02ff8",
+                    "f0a7e5a1-239f-4a2e-9b68-0c6e5eb63a37",
                     "85f347d0-6e1e-4c26-a15d-184f44b8c3af",
-                    "f0a7e5a1-239f-4a2e-9b68-0c6e5eb63a37"
+                    "e3c4cbe7-97a2-4de6-8a60-b1f5b0ea3e19",
+                    "a6bcb274-3565-4b72-8b4d-42f8fa7e37e3",
+                    "9d4b0e99-1e1c-47f0-95e8-c3e5d5e7ab38",
                 ];
 
                 // Fetch game data using the getGames function
