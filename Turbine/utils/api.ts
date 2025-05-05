@@ -17,7 +17,6 @@ const API_BASE_URL = 'https://xyxhy4n2o4.execute-api.us-east-2.amazonaws.com'; /
 
 // GET: /users [userid, userid...] -> [{userId: <>, name:<>, gamesOwned:<>}, {userId: <>, ...}]
 export const getUsers = async (userIds: string[]) => {
-  console.log(`userIds: ${userIds}`); //                                                                  <=============   For debugging purposes, you can remove this later
   try {
     const response = await axios.get(`${API_BASE_URL}/users`, {
       params: { ids: userIds.join(',') }, 
