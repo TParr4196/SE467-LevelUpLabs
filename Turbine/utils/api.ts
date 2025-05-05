@@ -14,6 +14,7 @@ const API_BASE_URL = 'https://xyxhy4n2o4.execute-api.us-east-2.amazonaws.com'; /
 //   }
 // };
 
+
 // GET: /users [userid, userid...] -> [{userId: <>, name:<>, gamesOwned:<>}, {userId: <>, ...}]
 export const getUsers = async (userIds: string[]) => {
   console.log(`userIds: ${userIds}`); //                                                                  <=============   For debugging purposes, you can remove this later
@@ -41,6 +42,29 @@ export const getGames = async (gameIds: string[]) => {
     throw error;
   }
 };
+
+// POST: /users/{userId}/games -> {name: <>, uuid: <>} -> {message: <>}
+export const postToCollection = async (userId: string, gameDetails: { name?: string; uuid?: string }) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/users/${userId}/games`, gameDetails);
+    return response.data; // Return the response message
+  } catch (error) {
+    console.error('Error adding game to collection:', error);
+    throw error;
+  }
+};
+
+// DELETE: /users/{userId}/games/{gameId} -> {message: <>}
+export const deleteFromCollection = async (userId: string, gameId: string) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/users/${userId}/games/${gameId}`);
+    return response.data; // Return the response message
+  } catch (error) {
+    console.error('Error deleting game from collection:', error);
+    throw error;
+  }
+};
+
 
 // GET: /guilds/guildId -> {guildId:<>, guildName:<>, img:<>, members:[userId, userId, ...], log:<>}
 export const getGuildDetails = async (guildId: number) => {
