@@ -56,7 +56,9 @@ export const postToCollection = async (userId: string, gameDetails: { name?: str
 // DELETE: /users/{userId}/games/{gameId} -> {message: <>}
 export const deleteFromCollection = async (userId: string, gameId: string) => {
   try {
+    console.log(`Sending DELETE request to: ${API_BASE_URL}/users/${userId}/games/${gameId}`);
     const response = await axios.delete(`${API_BASE_URL}/users/${userId}/games/${gameId}`);
+    console.log('DELETE response:', response);
     return response.data; // Return the response message
   } catch (error) {
     console.error('Error deleting game from collection:', error);

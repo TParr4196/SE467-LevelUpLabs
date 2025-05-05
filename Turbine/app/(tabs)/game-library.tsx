@@ -2,20 +2,38 @@ import { View, FlatList, Dimensions, ActivityIndicator, Text, Button, StyleSheet
 import { Card } from '@/components/GameCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
-import { getGames, getUsers, addGameToLibrary } from '@/utils/api'; // Add your POST API function here
-import { DEFAULT_USER_ID, DEFAULT_GAME_NAMES } from '@/utils/constants';
+import { deleteFromCollection, getGames, getUsers, postToCollection } from '@/utils/api'; // Add your POST API function here
+import { DEFAULT_USER_ID, DEFAULT_GAME_IDS } from '@/utils/constants';
+
+type Game = {
+    gameId: string;
+    imageUrl: string;
+    name: string;
+    rating: number;
+    recommendedPlayers: string;
+    averagePlaytime: string;
+    genres: string[];
+};
 
 export default function GameLibraryScreen() {
     const screenWidth = Dimensions.get('window').width;
     const numColumns = Math.floor(screenWidth / 180);
 
-    const [games, setGames] = useState([]);
+    // Properly type the state variables
+    const [games, setGames] = useState<Game[]>([]);
+    const [allFilteredGames, setAllFilteredGames] = useState<Game[]>([]); // Source of truth for filtered games
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [modalVisible, setModalVisible] = useState(false);
+    
+    const [addModalVisible, setAddModalVisible] = useState(false);
+    const [selectedGameToAdd, setSelectedGameToAdd] = useState<Game | null>(null);
+    
+    const [removeModalVisible, setRemoveModalVisible] = useState(false);
+    const [selectedGameToRemove, setSelectedGameToRemove] = useState<Game | null>(null);
+
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [selectedGame, setSelectedGame] = useState<any | null>(null);
+    const [searchResults, setSearchResults] = useState<Game[]>([]);
+
 
     useEffect(() => {
         const fetchGames = async () => {
@@ -25,10 +43,15 @@ export default function GameLibraryScreen() {
 
                 const fetchedGames = await getGames(gameIds);
 
-                const formattedGames = fetchedGames.map((game: any) => ({
-                    id: game.gameId,
-                    title: game.name,
-                    cover: game.imageUrl,
+                // Map the fetched games to the Game type
+                const formattedGames: Game[] = fetchedGames.map((game: Game) => ({
+                    gameId: game.gameId,
+                    imageUrl: game.imageUrl,
+                    name: game.name,
+                    rating: game.rating,
+                    recommendedPlayers: game.recommendedPlayers,
+                    averagePlaytime: game.averagePlaytime,
+                    genres: game.genres,
                 }));
 
                 setGames(formattedGames);
@@ -39,57 +62,102 @@ export default function GameLibraryScreen() {
                 setLoading(false);
             }
         };
-
+        getAllDefaultGames();
         fetchGames();
     }, []);
 
+    useEffect(() => {},[games]);
+
+    const getAllDefaultGames = async () => {
+        try {
+            const allGames = await getGames(DEFAULT_GAME_IDS);
+            console.log('all games from Search', allGames)
+            // Map the fetched games to the Game type
+            const allGameObjects: Game[] = allGames.map((game: Game) => ({
+                gameId: game.gameId,
+                imageUrl: game.imageUrl,
+                name: game.name,
+                rating: game.rating,
+                recommendedPlayers: game.recommendedPlayers,
+                averagePlaytime: game.averagePlaytime,
+                genres: game.genres,
+            }));
+
+            console.log('Games in library:', games);
+            console.log('All default games:', allGameObjects);
+            
+            // Filter out games that are already in the user's library
+            const filteredGames = allGameObjects.filter(
+                (game) => !games.some((g) => g.gameId === game.gameId)
+            );
+
+            setAllFilteredGames(filteredGames); // Save the full filtered list
+            setSearchResults(filteredGames); // Update the search results with the filtered list
+        } catch (err) {
+            console.error('Error fetching default games:', err);
+        }
+    }
+
     const handleAddGame = () => {
         setSearchQuery('');
-        setSearchResults([]);
-        setModalVisible(true);
+        setSelectedGameToAdd(null);
+        getAllDefaultGames(); // Fetch and filter the default games
+        setAddModalVisible(true);
+        
     };
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
-
-        // Filter games from DEFAULT_GAME_NAMES that match the query and are not already in the library
-        const filteredGames = DEFAULT_GAME_NAMES.filter(
-            (game: any) =>
-                game.name.toLowerCase().includes(query.toLowerCase()) &&
-                !games.some((g) => g.title === game.name)
+    
+        // Dynamically filter the searchResults based on the query
+        const filteredResults = allFilteredGames.filter((game) =>
+            game.name.toLowerCase().includes(query.toLowerCase())
         );
-
-        setSearchResults(filteredGames);
+    
+        setSearchResults(filteredResults);
     };
 
-    const handleSelectGame = (game: any) => {
-        setSelectedGame(game);
+    const handleSelectGame = (game: Game) => {
+        setSelectedGameToAdd(game);
     };
 
     const handleConfirmAddGame = async () => {
-        if (!selectedGame) return;
+        if (!selectedGameToAdd) return;
 
         try {
             // Send POST request to add the game to the backend
-            await addGameToLibrary(DEFAULT_USER_ID, selectedGame.id);
-            console.log(`Game added: ${selectedGame.name}`);
+            await postToCollection(DEFAULT_USER_ID, { uuid: selectedGameToAdd.gameId });
+            console.log(`Game added: ${selectedGameToAdd.name}`);
 
             // Update the local library
-            setGames((prevGames) => [
-                ...prevGames,
-                { id: selectedGame.id, title: selectedGame.name, cover: selectedGame.imageUrl },
-            ]);
+            setGames((prevGames) => [...prevGames, selectedGameToAdd]);
 
-            setModalVisible(false);
-            setSelectedGame(null);
+            setAddModalVisible(false);
+            setSelectedGameToAdd(null);
         } catch (err) {
             console.error('Error adding game to library:', err);
         }
     };
 
-    const handleRemoveGame = () => {
-        console.log('Remove Game button pressed');
-        // TODO: Implement functionality to remove a game from the library
+    const handleOpenRemoveModal = () => {
+        setSelectedGameToRemove(null);
+        setRemoveModalVisible(true);
+    };
+
+    const handleRemoveGame = async () => {
+        if (!selectedGameToRemove) return;
+
+        try {
+            const response = await deleteFromCollection(DEFAULT_USER_ID, selectedGameToRemove.gameId);
+
+            setGames((prevGames) => prevGames.filter((game) => game.gameId !== selectedGameToRemove.gameId));
+            setRemoveModalVisible(false);
+            setSelectedGameToRemove(null);
+
+        } catch (err) {
+            console.error('Error removing game from library:', err);
+            alert('An error occurred while removing the game. Please try again.');
+        }
     };
 
     if (loading) {
@@ -114,24 +182,24 @@ export default function GameLibraryScreen() {
                 data={games}
                 key={numColumns}
                 numColumns={numColumns}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <Card id={item.id} title={item.title} cover={item.cover} />}
+                keyExtractor={(item) => item.gameId}
+                renderItem={({ item }) => <Card id={item.gameId} title={item.name} cover={item.imageUrl} />}
                 columnWrapperStyle={{ gap: 12 }}
                 contentContainerStyle={{ gap: 12, paddingBottom: 100 }} // Add padding to avoid overlapping with buttons
             />
             <View style={styles.bottomBar}>
                 <View style={styles.buttonGroup}>
                     <Button title="Add Game" onPress={handleAddGame} />
-                    <Button title="Remove Game" onPress={handleRemoveGame} />
+                    <Button title="Remove Game" onPress={handleOpenRemoveModal} />
                 </View>
             </View>
 
             {/* Modal for Adding a Game */}
             <Modal
-                visible={modalVisible}
+                visible={addModalVisible}
                 transparent={true}
                 animationType="slide"
-                onRequestClose={() => setModalVisible(false)}
+                onRequestClose={() => setAddModalVisible(false)}
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
@@ -140,16 +208,16 @@ export default function GameLibraryScreen() {
                             style={styles.searchBox}
                             placeholder="Search for a game..."
                             value={searchQuery}
-                            onChangeText={handleSearch}
+                            onChangeText={handleSearch} // Dynamically filter searchResults as the user types
                         />
                         <FlatList
-                            data={searchResults}
-                            keyExtractor={(item) => item.id}
+                            data={searchResults} // Display dynamically filtered results
+                            keyExtractor={(item) => item.gameId}
                             renderItem={({ item }) => (
                                 <TouchableOpacity
                                     style={[
                                         styles.searchResult,
-                                        selectedGame?.id === item.id && styles.selectedGame,
+                                        selectedGameToAdd?.gameId === item.gameId && styles.selectedGame,
                                     ]}
                                     onPress={() => handleSelectGame(item)}
                                 >
@@ -160,9 +228,44 @@ export default function GameLibraryScreen() {
                         <Button
                             title="Add Selected Game"
                             onPress={handleConfirmAddGame}
-                            disabled={!selectedGame} // Disable button if no game is selected
+                            disabled={!selectedGameToAdd} // Disable button if no game is selected
                         />
-                        <Button title="Close" onPress={() => setModalVisible(false)} />
+                        <Button title="Close" onPress={() => setAddModalVisible(false)} />
+                    </View>
+                </View>
+            </Modal>
+            
+            {/* --- Remove Game Modal --- */}
+            <Modal
+                visible={removeModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setRemoveModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Remove a Game</Text>
+                        <FlatList
+                            data={games}
+                            keyExtractor={(item) => item.gameId}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.searchResult,
+                                        selectedGameToRemove?.gameId === item.gameId && styles.selectedGame,
+                                    ]}
+                                    onPress={() => setSelectedGameToRemove(item)}
+                                >
+                                    <Text style={styles.searchResultText}>{item.name}</Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+                        <Button
+                            title="Delete Selected Game"
+                            onPress={handleRemoveGame}
+                            disabled={!selectedGameToRemove}
+                        />
+                        <Button title="Close" onPress={() => setRemoveModalVisible(false)} />
                     </View>
                 </View>
             </Modal>
