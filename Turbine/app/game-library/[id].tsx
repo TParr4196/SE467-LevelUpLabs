@@ -57,7 +57,7 @@ export default function GameDetailScreen() {
             <Text style={styles.title}>{game.name}</Text>
             <Text style={styles.subtitle}>Rating: {game.rating}</Text>
             <Text style={styles.subtitle}>Genres: {game.genres.join(', ')}</Text>
-            <Text style={styles.subtitle}>Average Playtime: {game.averagePlaytime} hours</Text>
+            <Text style={styles.subtitle}>Average Playtime: {game.averagePlaytime}</Text>
             <Text style={styles.subtitle}>Recommended Players: {game.recommendedPlayers}</Text>
         </View>
     );
