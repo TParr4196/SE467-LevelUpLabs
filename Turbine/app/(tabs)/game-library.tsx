@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import { deleteFromCollection, getGames, getUsers, postToCollection } from '@/utils/api'; // Add your POST API function here
 import { DEFAULT_USER_ID, DEFAULT_GAME_IDS } from '@/utils/constants';
-import { fetchUserGames } from '@/scripts/userScripts';
 
 type Game = {
     gameId: string;
@@ -35,11 +34,27 @@ export default function GameLibraryScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<Game[]>([]);
 
+
     useEffect(() => {
         const fetchGames = async () => {
             try {
-                const formattedGames = await fetchUserGames(DEFAULT_USER_ID); // Use the helper function
-                setGames(formattedGames); // Update the games state
+                const userDetails = await getUsers([DEFAULT_USER_ID]);
+                const gameIds = userDetails[0].gamesOwned;
+
+                const fetchedGames = await getGames(gameIds);
+
+                // Map the fetched games to the Game type
+                const formattedGames: Game[] = fetchedGames.map((game: Game) => ({
+                    gameId: game.gameId,
+                    imageUrl: game.imageUrl,
+                    name: game.name,
+                    rating: game.rating,
+                    recommendedPlayers: game.recommendedPlayers,
+                    averagePlaytime: game.averagePlaytime,
+                    genres: game.genres,
+                }));
+
+                setGames(formattedGames);
             } catch (err) {
                 setError('Failed to load games. Please try again later.');
                 console.error(err);
@@ -47,11 +62,9 @@ export default function GameLibraryScreen() {
                 setLoading(false);
             }
         };
-    
-        getAllDefaultGames(); // Fetch all default games
-        fetchGames(); // Fetch user's games
+        getAllDefaultGames();
+        fetchGames();
     }, []);
-
 
     useEffect(() => {},[games]);
 
