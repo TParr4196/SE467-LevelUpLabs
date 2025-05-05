@@ -40,7 +40,9 @@ Verify that Django was installed
 - `django-admin --version`
 
 --Install Dependencies--
-TODO
+
+npm install react-native-paper react-native-vector-icons
+
 
 Starting Server:
 
@@ -48,12 +50,5 @@ Starting Server:
 - `py manage.py runserver`
 
 # React Frontend
-
-Use ONLY NPM
-
-Navigate to `/Turbine` folder
-`npm install`
-
-If you already have issues, delete node_modules/ , .expo/, and package-lock.json. Then re-run `npm install`
-
-To run it, do `npx expo start --web`
+- From `/Turbine`
+- `npx expo start`
