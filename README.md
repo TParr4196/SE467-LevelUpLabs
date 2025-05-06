@@ -12,6 +12,8 @@ Step 4: `Github Actions sends to our lambda file in AWS`
 
 Step 5: `Lambda file talks to our NoSQL database and lambda AWS returns the results`
 
+Step 6: `The CI/CD pushes the web version of the react native app to the s3 container for web hosting`
+
 # React/Expo Frontend
 
 - From `/Turbine`
