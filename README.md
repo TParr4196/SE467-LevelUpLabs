@@ -1,54 +1,28 @@
 467 starter repo
 
-# Django Backend
+# Deployment
 
-This project uses a django backend server to handle the API requests, which will talk to a sqlite database.
+Step 1: `Work on individual branches`
 
-## Setting Up Environment:
+Step 2: `Push to the branch and merge into main branch`
 
-### Ensure `pip` and `python` is installed <br />
+Step 3: `Merge main branch into deployment branch to trigger Github Actions`
 
-- `pip --version` <br />
-- `py --version` or `python --version` <br />
+Step 4: `Github Actions sends to our lambda file in AWS`
 
-### Create the virtural environment
+Step 5: `Lambda file talks to our NoSQL database and lambda AWS returns the results`
 
-\*\* In the repo's main directory
+Step 6: `The CI/CD pushes the web version of the react native app to the s3 container for web hosting`
 
-Windows: <br />
-&nbsp;&nbsp;&nbsp; `py -m venv .venv` or `python -m venv .venv` <br />
-Unix/MacOS: <br />
-&nbsp;&nbsp;&nbsp; `python -m venv .venv`
+# React/Expo Frontend
 
-### Start the virtural environment
-
-Windows: <br />
-&nbsp;&nbsp;&nbsp; `.venv\Scripts\activate` <br />
-Unix/MacOS: <br />
-&nbsp;&nbsp;&nbsp; `source .venv/bin/activate` <br />
-
-If the virtural environment has started, you should see something like this in the terminal: <br />
-&nbsp;&nbsp;&nbsp; `(.venv.) C:\Users\Your Name> `
-<br /> <br />
-
-## Install Django
-
-`pip install -r requirements.txt`
-
-Verify that Django was installed
-
-- `django-admin --version`
+- From `/Turbine`
 
 --Install Dependencies--
 
-npm install react-native-paper react-native-vector-icons
-
+- `npm install react-native-paper react-native-vector-icons`
+- `npm i` to install node_modules in Turbine folder
 
 Starting Server:
 
-- Navigate to the `/Backend` folder
-- `py manage.py runserver`
-
-# React Frontend
-- From `/Turbine`
 - `npx expo start`
