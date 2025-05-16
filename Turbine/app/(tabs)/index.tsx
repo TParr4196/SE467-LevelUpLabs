@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, Image, Animated } from 'react-native';
 import React, { useRef, useEffect, useState } from 'react';
 import { fetchUserGames } from '@/scripts/userScripts';
 import { DEFAULT_USER_ID, DEFAULT_FRIEND_IDS } from '@/utils/constants';
-import { getUsers } from '@/utils/api';
+import { getUserFriends, getUsers } from '@/utils/api';
 
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { TouchableOpacity, FlatList } from 'react-native';
@@ -38,7 +38,7 @@ export default function HomeScreen() {
     const fetchFriends = async () => {
       try {
         // Fetch user details for the friend IDs
-        const users = await getUsers(DEFAULT_FRIEND_IDS);
+        const users = await getUserFriends(userId);
         setFriendsDetails(users);
       } catch (err) {
         console.error('Error fetching friends:', err);

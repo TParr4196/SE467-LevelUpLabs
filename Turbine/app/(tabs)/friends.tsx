@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Switch, Image, FlatList, Alert, Button, Platform, TouchableOpacity, Modal } from 'react-native';
 import GameLibraryScreen from './game-library'; // Import the GameLibraryScreen
-import {DEFAULT_FRIEND_IDS} from '@/utils/constants'; // HARD CODED FRIENDS
-import { getUsers } from '@/utils/api';
+import {DEFAULT_USER_ID} from '@/utils/constants'; // HARD CODED FRIENDS
+import { getUserFriends, getUsers } from '@/utils/api';
 
 export default function FriendsScreen() {
   const [friendsDetails, setFriendsDetails] = useState<any[]>([]);
@@ -15,7 +15,7 @@ export default function FriendsScreen() {
     const fetchFriends = async () => {
       try {
         // Fetch user details for the friend IDs
-        const users = await getUsers(DEFAULT_FRIEND_IDS);
+        const users = await getUserFriends(DEFAULT_USER_ID);
         setFriendsDetails(users);
       } catch (err) {
         console.error('Error fetching friends:', err);
