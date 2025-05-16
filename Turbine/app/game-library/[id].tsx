@@ -3,10 +3,11 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { getGames } from '@/utils/api';
+import { Game } from '@/types/game';
 
 export default function GameDetailScreen() {
     const { id } = useLocalSearchParams(); // Get the game ID from the route
-    const [game, setGame] = useState(null);
+    const [game, setGame] = useState<Game>({} as Game);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 

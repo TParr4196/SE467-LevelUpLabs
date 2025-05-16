@@ -3,7 +3,7 @@ import { Card } from '@/components/GameCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import { deleteFromCollection, getGames, getUsers, postToCollection } from '@/utils/api'; // Add your POST API function here
-import { DEFAULT_USER_ID, DEFAULT_GAME_IDS } from '@/utils/constants';
+import { DEFAULT_USER_ID } from '@/utils/constants';
 
 type Game = {
     gameId: string;
@@ -70,7 +70,7 @@ export default function GameLibraryScreen() {
 
     const getAllDefaultGames = async () => {
         try {
-            const allGames = await getGames(DEFAULT_GAME_IDS);
+            const allGames = await getGames();
             console.log('all games from Search', allGames)
             // Map the fetched games to the Game type
             const allGameObjects: Game[] = allGames.map((game: Game) => ({

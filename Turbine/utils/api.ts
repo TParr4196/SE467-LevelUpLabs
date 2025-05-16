@@ -29,13 +29,26 @@ export const getUsers = async (userIds: string[]) => {
   }
 };
 
+// GET: /users/{userId}/friends -> [{userId, name, imageUrl}, {userId, name, imageUrl}, ...]
+export const getUserFriends = async (userId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}/friends`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user friends:', error);
+    throw error;
+  }
+};
+
 // GET: /games [gameId, gameId, ...] -> [{gameId:<>, name:<>, genres:[<>], rating:<>, imageUrl:<>, averagePlaytime:<>, recommendedPlayers:<>}, {gameId:<>, ...}]
-export const getGames = async (gameIds: string[]) => {
+export const getGames = async (gameIds: string[] | null = null) => {
   try {
     // const response = await axios.get(`${API_BASE_URL}/games`);
-    const response = await axios.get(`${API_BASE_URL}/games`, {
-      params: { ids: gameIds.join(',') }, 
-    });
+    const response = await axios.get(`${API_BASE_URL}/games`,
+      gameIds && gameIds.length > 0
+        ? { params: { ids: gameIds.join(',') } }
+        : { params: { ids: [] } }
+    );
     return response.data;
   } catch (error) {
     console.error('Error fetching game details:', error);
