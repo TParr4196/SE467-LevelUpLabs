@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Image, Animated } from 'react-native';
 import React, { useRef, useEffect, useState } from 'react';
 import { fetchUserGames } from '@/scripts/userScripts';
-import { DEFAULT_USER_ID, DEFAULT_FRIEND_IDS } from '@/utils/constants';
+import { DEFAULT_USER_ID } from '@/utils/constants';
 import { getUserFriends, getUsers } from '@/utils/api';
 
 import { useNavigation, NavigationProp } from '@react-navigation/native';
