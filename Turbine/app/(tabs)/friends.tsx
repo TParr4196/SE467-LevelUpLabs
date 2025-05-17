@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
-import { getUsers } from '@/utils/api';
-import { DEFAULT_FRIEND_IDS } from '@/utils/constants';
+
+
 import { getGuildDetails } from '@/utils/api';
-import { StyleSheet, View, Text, Switch, Image, FlatList, Alert, Button, Platform, TouchableOpacity, Modal } from 'react-native';
+
 import GameLibraryScreen from './game-library'; // Import the GameLibraryScreen
-import {DEFAULT_USER_ID} from '@/utils/constants'; // HARD CODED FRIENDS
+import {DEFAULT_USER_ID, DEFAULT_FRIEND_IDS} from '@/utils/constants'; // HARD CODED FRIENDS
 import { getUserFriends, getUsers } from '@/utils/api';
 
 export default function GuildsFriendsScreen() {
@@ -45,8 +45,9 @@ export default function GuildsFriendsScreen() {
       try {
         setLoading(true);
         if (isGuildsView) {
-          const guilds = await getGuildDetails();
-          setGuildsDetails(guilds);
+          // Fetch guild details
+          // const guilds = await getGuildDetails();
+          // setGuildsDetails(guilds);
         } else {
           const friends = await getUsers(DEFAULT_FRIEND_IDS);
           setFriendsDetails(friends);

@@ -81,6 +81,10 @@ export default function TabThreeScreen() {
   const togglePrivacy = () => setIsPrivate((previousState) => !previousState);
 
   // Save description and update backend
+
+
+  // this section is broken it is not setting the description in the database properly
+  // it is setting the description in the state but not in the database
   const handleSaveDescription = async () => {
     setDescription(tempDescription);
     setIsEditingDescription(false);
