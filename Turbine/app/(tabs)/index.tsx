@@ -28,9 +28,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Dummy profile data for the right-side profile panel
-  const [profileAvatarUri] = useState('https://www.gravatar.com/avatar/?d=mp');
-  const [profileDescription] = useState('This is your profile description.');
+  // Profile state for the right-side profile panel
+  const [profile, setProfile] = useState<{ avatarUri: string; description: string }>({
+    avatarUri: 'https://www.gravatar.com/avatar/?d=mp',
+    description: 'This is your profile description.',
+  });
 
   useEffect(() => {
     const userId = DEFAULT_USER_ID; // Replace with actual user ID if needed
@@ -52,7 +54,23 @@ export default function HomeScreen() {
       }
     };
 
+    const fetchProfile = async () => {
+      try {
+        const users = await getUsers([userId]);
+        const data = Array.isArray(users) ? users[0] : users;
+        setProfile({
+          avatarUri: data.imageUrl
+            ? `https://external-content.duckduckgo.com/iu/?u=${encodeURIComponent(data.imageUrl)}&f=1&nofb=1`
+            : 'https://www.gravatar.com/avatar/?d=mp',
+          description: data.description || 'This is your profile description.',
+        });
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+
     fetchFriends();
+    fetchProfile();
   }, []);
 
   if (loading) {
@@ -78,7 +96,7 @@ export default function HomeScreen() {
       <View style={styles.mainContent}>
         <GameLibrary games={games} />
         <FriendsContainer friends={friendsDetails} />
-        <ProfileContainer avatarUri={profileAvatarUri} description={profileDescription} />
+        <ProfileContainer avatarUri={profile.avatarUri} description={profile.description} />
       </View>
       </View>
     </View>

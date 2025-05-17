@@ -33,6 +33,8 @@ export const getUsers = async (userIds: string[]) => {
 export const getUserFriends = async (userId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/users/${userId}/friends`);
+    console.log(`${API_BASE_URL}/users/${userId}/friends`)
+    console.log('User friends:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching user friends:', error);
@@ -162,8 +164,18 @@ export const voteForGame = async (sessionId: number, gameId: number) => {
 export const getUserProfile = async (userId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/users/${userId}/profile`);
-    console.log('User profile:', response.data);
-    return response.data;
+    const data = response.data;
+
+    // Map backend fields to frontend fields if needed
+    return {
+      userId: data.userId,
+      // Use 'name' from backend as 'username' if your frontend expects 'username'
+      username: data.username || data.name || '',
+      avatarUrl: data.avatarUrl || data.imageUrl || '',
+      description: data.description || '',
+      isPrivate: data.isPrivate ?? false,
+      // Add any other fields you expect here
+    };
   } catch (error) {
     console.error('Error fetching user profile:', error);
     throw error;
@@ -176,8 +188,8 @@ export const updateUserProfile = async (
   profile: { description?: string; isPrivate?: boolean }
 ) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/users/${userId}/profile`, profile);
-    
+    // The backend expects PUT /{userId}
+    const response = await axios.put(`${API_BASE_URL}/${userId}`, profile);
     return response.data;
   } catch (error) {
     console.error('Error updating user profile:', error);
@@ -210,5 +222,3 @@ export const uploadUserAvatar = async (userId: string, imageUri: string) => {
     throw error;
   }
 };
-
-// ...existing code...
