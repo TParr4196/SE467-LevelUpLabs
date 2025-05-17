@@ -142,3 +142,60 @@ export const voteForGame = async (sessionId: number, gameId: number) => {
     throw error;
   }
 };
+
+
+
+// GET: /users/{userId}/profile -> {userId, username, avatarUrl, description, isPrivate, ...}
+export const getUserProfile = async (userId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}/profile`);
+    console.log('User profile:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
+};
+
+// PUT: /users/{userId}/profile -> {description, isPrivate} -> updated profile
+export const updateUserProfile = async (
+  userId: string,
+  profile: { description?: string; isPrivate?: boolean }
+) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/users/${userId}/profile`, profile);
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+// POST: /users/{userId}/avatar -> multipart/form-data {avatar: file} -> {avatarUrl}
+export const uploadUserAvatar = async (userId: string, imageUri: string) => {
+  try {
+    const formData = new FormData();
+    formData.append('avatar', {
+      uri: imageUri,
+      name: 'avatar.png',
+      type: 'image/png',
+    } as any);
+
+    const response = await axios.post(
+      `${API_BASE_URL}/users/${userId}/avatar`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading user avatar:', error);
+    throw error;
+  }
+};
+
+// ...existing code...

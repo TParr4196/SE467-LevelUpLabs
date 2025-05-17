@@ -16,6 +16,7 @@ export default function FriendsScreen() {
       try {
         // Fetch user details for the friend IDs
         const users = await getUsers(DEFAULT_FRIEND_IDS);
+        console.log('Fetched friends:', users);
         setFriendsDetails(users);
       } catch (err) {
         console.error('Error fetching friends:', err);
