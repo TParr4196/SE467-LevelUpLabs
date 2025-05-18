@@ -5,14 +5,20 @@ import { getUserFriends } from '@/utils/api';
 import { DEFAULT_USER_ID } from '@/utils/constants';
 import { Game } from '@/types/game';
 import { Friend } from '@/types/friend';
+import { Profile } from '@/types/profile';
+import { getUsers } from '@/utils/api';
+const defaultAvatar = "https://www.gravatar.com/avatar/?d=mp"; // Default avatar URL
 
 type AppDataContextType = {
   games: Game[];
   friends: Friend[];
   loading: boolean;
   error: string | null;
+  profile: Profile | null;
   setGames: React.Dispatch<React.SetStateAction<Game[]>>;
-  
+  setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 const AppDataContext = createContext<AppDataContextType>({
@@ -20,7 +26,11 @@ const AppDataContext = createContext<AppDataContextType>({
   friends: [],
   loading: true,
   error: null,
+  profile: null,
+  setProfile: () => {},
   setGames: () => {},
+  setLoading: () => {},
+  setError: () => {},
 });
 
 export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -28,6 +38,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     const userId = DEFAULT_USER_ID;
@@ -48,12 +59,32 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setLoading(false);
       }
     };
-
+    async function fetchUserInfo(userId: string) {
+        try {
+          const response = await getUsers([userId]);
+          // The backend returns an array of users
+          const data = Array.isArray(response) ? response[0] : response;
+    
+          console.log("User Info:", data);
+          const newProfile: Profile = {
+            // Assuming the backend returns a profile object
+            avatarUri: data.imageUrl || defaultAvatar,
+            description: data.derscription || '',
+            isPrivate: data.isPrivate || false,
+          }
+          setProfile(newProfile);
+          // Log the value directly from data to verify what is being set
+          
+        } catch (error) {
+          console.error("Error fetching user info:", error);
+        }
+    }
     loadGamesAndFriends();
+    fetchUserInfo(DEFAULT_USER_ID)
   }, []);
 
   return (
-    <AppDataContext.Provider value={{ games, friends, loading, error, setGames }}>
+    <AppDataContext.Provider value={{ games, friends, loading, error, profile, setProfile, setGames, setError, setLoading }}>
       {children}
     </AppDataContext.Provider>
   );

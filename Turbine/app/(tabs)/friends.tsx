@@ -7,13 +7,13 @@ import { getGuildDetails } from '@/utils/api';
 import GameLibraryScreen from './game-library'; // Import the GameLibraryScreen
 import {DEFAULT_USER_ID, DEFAULT_FRIEND_IDS} from '@/utils/constants'; // HARD CODED FRIENDS
 import { getUserFriends, getUsers } from '@/utils/api';
+import { useAppData } from '../context/AppDataContext';
 
 export default function GuildsFriendsScreen() {
   const [isGuildsView, setIsGuildsView] = useState(false);
   const [guildsDetails, setGuildsDetails] = useState<any[]>([]);
   const [friendsDetails, setFriendsDetails] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { loading, error, setLoading, setError } = useAppData(); // Use context to get loading and error states
 
   // Guild invites modal state
   const [invitesVisible, setInvitesVisible] = useState(false);

@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  StyleSheet,
   View,
   Modal,
   TouchableOpacity,
@@ -14,32 +13,58 @@ import * as ImagePicker from "expo-image-picker";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { styles } from "@/app/styles/profileStyles";
 
+import { DEFAULT_USER_ID } from "@/utils/constants";
+import { updateUserProfile } from "@/utils/api"; // <-- Add updateUserProfile
 
-import { DEFAULT_USER_ID } from "@/utils/constants"; // HARD CODED FRIENDS
-import { getUserProfile, getUsers, updateUserProfile } from "@/utils/api"; // <-- Add updateUserProfile
-
+import { useAppData } from "../context/AppDataContext";
 const defaultAvatar = "https://www.gravatar.com/avatar/?d=mp"; // Default avatar URL
-const defaultDescription = "This is your profile description."; // Default description
 
 export default function TabThreeScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-
-  // State for profile privacy (public/private)
-  const [isPrivate, setIsPrivate] = useState(false);
-
-  // State for profile description
-  const [description, setDescription] = useState(
-    "This is your profile description."
-  );
+  const { profile, setProfile } = useAppData(); // Use context to get and set profile
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [tempDescription, setTempDescription] = useState(description);
+  const [tempDescription, setTempDescription] = useState("This is your profile description.");
+
+  useEffect(() => {
+    console.log("Profile updated:", profile);
+  }, [profile])
 
   // State for avatar image (basic placeholder)
-  const [avatarUri, setAvatarUri] = useState(
-    "https://www.gravatar.com/avatar/?d=mp"
-  );
+  function setAvatarUri(avatarUri: string) {
+    setProfile((prevProfile) =>
+      prevProfile? {
+            ...prevProfile,
+            avatarUri: avatarUri,
+            isPrivate: prevProfile.isPrivate,
+            description: prevProfile.description,
+          }
+        : {
+            avatarUri: avatarUri,
+            isPrivate: false,
+            description: "",
+          }
+    );
+  }
+
+  function setDescription(description: string) {
+    setProfile((prevProfile) =>
+      prevProfile
+        ? {
+            ...prevProfile,
+            avatarUri: prevProfile.avatarUri,
+            isPrivate: prevProfile.isPrivate,
+            description: description,
+          }
+        : {
+            avatarUri: "",
+            isPrivate: false,
+            description: description,
+          }
+    );
+  }
 
   // Open and close modal
   const openModal = () => setIsModalVisible(true);
@@ -55,30 +80,24 @@ export default function TabThreeScreen() {
     closeModal();
   };
 
-  React.useEffect(() => {
-    fetchUserInfo(DEFAULT_USER_ID);
-  }, []);
-
-  async function fetchUserInfo(userId: string) {
-    try {
-      const response = await getUsers([userId]);
-      // The backend returns an array of users
-      const data = Array.isArray(response) ? response[0] : response;
-
-      console.log("User Info:", data);
-
-      setAvatarUri(data.imageUrl );
-      setDescription(data.description || defaultDescription);
-      setIsPrivate(data.isPrivate || false);
-      // Log the value directly from data to verify what is being set
-      
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-    }
-  }
-
   // Toggle privacy
-  const togglePrivacy = () => setIsPrivate((previousState) => !previousState);
+  const togglePrivacy = async () => {
+    try {
+      // Toggle the privacy value
+      const newIsPrivate = !profile?.isPrivate;
+      // Update backend
+      await updateUserProfile(DEFAULT_USER_ID, { isPrivate: newIsPrivate });
+      // Update context state
+      setProfile({
+        ...profile,
+        isPrivate: newIsPrivate,
+        avatarUri: profile?.avatarUri ?? "",
+        description: profile?.description ?? "",
+      });
+    } catch (error) {
+      console.error("Failed to update privacy:", error);
+    }
+  };
 
   // Save description and update backend
 
@@ -129,15 +148,6 @@ export default function TabThreeScreen() {
 
   return (
     <>
-      <View style={{ alignItems: "center", marginTop: 16 }}>
-        <Button
-          mode="contained"
-          onPress={() => fetchUserInfo(DEFAULT_USER_ID)}
-          style={{ marginBottom: 12 }}
-        >
-          Fetch User Info
-        </Button>
-      </View>
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
         headerImage={
@@ -155,10 +165,10 @@ export default function TabThreeScreen() {
         {/* Avatar Image Section */}
         <View style={styles.avatarContainer}>
          <Image
-  source={{ uri: avatarUri || "loading..." }}
+  source={{ uri: profile?.avatarUri || defaultAvatar }}
   style={styles.avatarImage}
   onError={e => {
-    console.warn('Failed to load avatar image:', avatarUri, e.nativeEvent);
+    console.warn('Failed to load avatar image:', profile?.avatarUri, e.nativeEvent);
     setAvatarUri(defaultAvatar);
   }}
 />
@@ -198,10 +208,10 @@ export default function TabThreeScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.descriptionText}>{description}</Text>
+              <Text style={styles.descriptionText}>{profile?.description}</Text>
               <Button
                 onPress={() => {
-                  setTempDescription(description);
+                  setTempDescription(profile?.description || "");
                   setIsEditingDescription(true);
                 }}
               >
@@ -214,13 +224,13 @@ export default function TabThreeScreen() {
         {/* Profile Privacy Toggle */}
         <View style={styles.privacyContainer}>
           <Text style={styles.privacyText}>
-            {isPrivate ? "Private Profile" : "Public Profile"}
+            {profile?.isPrivate ? "Private Profile" : "Public Profile"}
           </Text>
           <Switch
-            value={isPrivate}
+            value={profile?.isPrivate}
             onValueChange={togglePrivacy}
             trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={isPrivate ? "#f5dd4b" : "#f4f3f4"}
+            thumbColor={profile?.isPrivate ? "#f5dd4b" : "#f4f3f4"}
           />
         </View>
 
@@ -323,124 +333,3 @@ export default function TabThreeScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  logoImage: {
-    width: "100%",
-    height: 220,
-    alignSelf: "center",
-    marginTop: 30,
-    marginBottom: 10,
-  },
-  headerImage: {
-    color: "#808080",
-    bottom: -90,
-    left: -35,
-    position: "absolute",
-  },
-  titleContainer: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  avatarContainer: {
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  avatarImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 50,
-    backgroundColor: "#eee",
-    marginBottom: 8,
-    borderWidth: 2,
-    borderColor: "#ccc",
-  },
-  avatarLabel: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 4,
-  },
-  editAvatarButton: {
-    marginTop: 4,
-    marginBottom: 8,
-    alignSelf: "center",
-  },
-  descriptionContainer: {
-    backgroundColor: "#f8f8f8",
-    borderRadius: 8,
-    padding: 16,
-    marginHorizontal: 10,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  descriptionText: {
-    fontSize: 15,
-    color: "#444",
-    marginBottom: 8,
-  },
-  descriptionInput: {
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 6,
-    padding: 8,
-    fontSize: 15,
-    backgroundColor: "#fff",
-    marginBottom: 8,
-    minHeight: 60,
-    textAlignVertical: "top",
-  },
-  saveButton: {
-    marginBottom: 8,
-  },
-  privacyContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  privacyText: {
-    fontSize: 18,
-    color: "#333",
-  },
-  menuContainer: {
-    marginVertical: 20,
-    alignItems: "flex-start",
-    paddingHorizontal: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Dim background
-  },
-  modalContent: {
-    width: 300,
-    padding: 20,
-    backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  modalOption: {
-    fontSize: 16,
-    marginVertical: 10,
-    color: "#007BFF",
-  },
-  selectedOption: {
-    color: "#FF6347", // Highlight color when selected
-    fontWeight: "bold",
-  },
-  sendButton: {
-    marginTop: 20,
-  },
-});

@@ -17,12 +17,7 @@ import { useAppData } from '@/app/context/AppDataContext'; // new import
 
 export default function HomeScreen() {
   const bounceAnim = useRef(new Animated.Value(0)).current;
-  const { games, friends, loading, error } = useAppData(); // use context
-
-  const [profile, setProfile] = useState<{ avatarUri: string; description: string }>({
-    avatarUri: 'https://www.gravatar.com/avatar/?d=mp',
-    description: 'This is your profile description.',
-  });
+  const { games, friends, loading, error, profile, setProfile } = useAppData(); // use context
 
   useEffect(() => {
     const userId = DEFAULT_USER_ID;
@@ -36,6 +31,7 @@ export default function HomeScreen() {
             ? `https://external-content.duckduckgo.com/iu/?u=${encodeURIComponent(data.imageUrl)}&f=1&nofb=1`
             : 'https://www.gravatar.com/avatar/?d=mp',
           description: data.description || 'This is your profile description.',
+          isPrivate: typeof data.isPrivate === 'boolean' ? data.isPrivate : false,
         });
       } catch (err) {
         // Handle profile error if needed
@@ -68,7 +64,7 @@ export default function HomeScreen() {
         <View style={styles.mainContent}>
           <GameLibrary games={games} />
           <FriendsContainer friends={friends} />
-          <ProfileContainer avatarUri={profile.avatarUri} description={profile.description} />
+          <ProfileContainer avatarUri={profile?.avatarUri || "https://www.gravatar.com/avatar/?d=mp"} description={profile?.description || ""} />
         </View>
       </View>
     </View>
