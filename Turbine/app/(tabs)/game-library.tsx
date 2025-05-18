@@ -1,29 +1,20 @@
 import { View, FlatList, Dimensions, ActivityIndicator, Text, Button, StyleSheet, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/GameCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { deleteFromCollection, getGames, getUsers, postToCollection } from '@/utils/api'; // Add your POST API function here
 import { DEFAULT_USER_ID } from '@/utils/constants';
-
-type Game = {
-    gameId: string;
-    imageUrl: string;
-    name: string;
-    rating: number;
-    recommendedPlayers: string;
-    averagePlaytime: string;
-    genres: string[];
-};
+import { Game } from '@/types/game';
+import { useAppData } from '@/app/context/AppDataContext'; // Import the context
+import { styles } from '@/app/styles/gameLibraryStyles';
 
 export default function GameLibraryScreen() {
     const screenWidth = Dimensions.get('window').width;
     const numColumns = Math.floor(screenWidth / 180);
 
     // Properly type the state variables
-    const [games, setGames] = useState<Game[]>([]);
+    const { games, setGames, error, loading } = useAppData(); // Use context to get and set games
     const [allFilteredGames, setAllFilteredGames] = useState<Game[]>([]); // Source of truth for filtered games
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     
     const [addModalVisible, setAddModalVisible] = useState(false);
     const [selectedGameToAdd, setSelectedGameToAdd] = useState<Game | null>(null);
@@ -33,40 +24,6 @@ export default function GameLibraryScreen() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<Game[]>([]);
-
-
-    useEffect(() => {
-        const fetchGames = async () => {
-            try {
-                const userDetails = await getUsers([DEFAULT_USER_ID]);
-                const gameIds = userDetails[0].gamesOwned;
-
-                const fetchedGames = await getGames(gameIds);
-
-                // Map the fetched games to the Game type
-                const formattedGames: Game[] = fetchedGames.map((game: Game) => ({
-                    gameId: game.gameId,
-                    imageUrl: game.imageUrl,
-                    name: game.name,
-                    rating: game.rating,
-                    recommendedPlayers: game.recommendedPlayers,
-                    averagePlaytime: game.averagePlaytime,
-                    genres: game.genres,
-                }));
-
-                setGames(formattedGames);
-            } catch (err) {
-                setError('Failed to load games. Please try again later.');
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        getAllDefaultGames();
-        fetchGames();
-    }, []);
-
-    useEffect(() => {},[games]);
 
     const getAllDefaultGames = async () => {
         try {
@@ -272,65 +229,3 @@ export default function GameLibraryScreen() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    center: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    bottomBar: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 60,
-        backgroundColor: '#f5f5f5',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderTopWidth: 1,
-        borderTopColor: '#ccc',
-    },
-    buttonGroup: {
-        flexDirection: 'row',
-        gap: 20, // Space between the buttons
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-        width: '90%',
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 16,
-        alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    searchBox: {
-        width: '100%',
-        padding: 8,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        marginBottom: 16,
-    },
-    searchResult: {
-        padding: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-        width: '100%',
-    },
-    selectedGame: {
-        backgroundColor: '#e0e0e0',
-    },
-    searchResultText: {
-        fontSize: 16,
-    },
-});

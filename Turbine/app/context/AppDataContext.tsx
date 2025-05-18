@@ -11,6 +11,8 @@ type AppDataContextType = {
   friends: Friend[];
   loading: boolean;
   error: string | null;
+  setGames: React.Dispatch<React.SetStateAction<Game[]>>;
+  
 };
 
 const AppDataContext = createContext<AppDataContextType>({
@@ -18,6 +20,7 @@ const AppDataContext = createContext<AppDataContextType>({
   friends: [],
   loading: true,
   error: null,
+  setGames: () => {},
 });
 
 export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -50,7 +53,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   return (
-    <AppDataContext.Provider value={{ games, friends, loading, error }}>
+    <AppDataContext.Provider value={{ games, friends, loading, error, setGames }}>
       {children}
     </AppDataContext.Provider>
   );
