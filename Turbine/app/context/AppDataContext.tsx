@@ -65,7 +65,6 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
           // The backend returns an array of users
           const data = Array.isArray(response) ? response[0] : response;
     
-          console.log("User Info:", data);
           const newProfile: Profile = {
             // Assuming the backend returns a profile object
             avatarUri: data.imageUrl || defaultAvatar,

@@ -28,10 +28,6 @@ export default function TabThreeScreen() {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [tempDescription, setTempDescription] = useState("This is your profile description.");
 
-  useEffect(() => {
-    console.log("Profile updated:", profile);
-  }, [profile])
-
   // State for avatar image (basic placeholder)
   function setAvatarUri(avatarUri: string) {
     setProfile((prevProfile) =>
