@@ -28,6 +28,12 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Profile state for the right-side profile panel
+  const [profile, setProfile] = useState<{ avatarUri: string; description: string }>({
+    avatarUri: 'https://www.gravatar.com/avatar/?d=mp',
+    description: 'This is your profile description.',
+  });
+
   useEffect(() => {
     const userId = DEFAULT_USER_ID; // Replace with actual user ID if needed
     fetchUserGames(userId).then((fetchedGames) => {
@@ -48,7 +54,23 @@ export default function HomeScreen() {
       }
     };
 
+    const fetchProfile = async () => {
+      try {
+        const users = await getUsers([userId]);
+        const data = Array.isArray(users) ? users[0] : users;
+        setProfile({
+          avatarUri: data.imageUrl
+            ? `https://external-content.duckduckgo.com/iu/?u=${encodeURIComponent(data.imageUrl)}&f=1&nofb=1`
+            : 'https://www.gravatar.com/avatar/?d=mp',
+          description: data.description || 'This is your profile description.',
+        });
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+
     fetchFriends();
+    fetchProfile();
   }, []);
 
   if (loading) {
@@ -74,7 +96,7 @@ export default function HomeScreen() {
       <View style={styles.mainContent}>
         <GameLibrary games={games} />
         <FriendsContainer friends={friendsDetails} />
-        <ProfileContainer />
+        <ProfileContainer avatarUri={profile.avatarUri} description={profile.description} />
       </View>
       </View>
     </View>
@@ -191,7 +213,12 @@ function FriendsContainer({ friends }: FriendsContainerProps) {
   );
 }
 
-function ProfileContainer() {
+type ProfileContainerProps = {
+  avatarUri: string;
+  description: string;
+};
+
+function ProfileContainer({ avatarUri, description }: ProfileContainerProps) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const handleNavigateToProfile = () => {
@@ -204,11 +231,17 @@ function ProfileContainer() {
         <Text style={styles.title}>Your Profile</Text>
       </View>
       <TouchableOpacity onPress={handleNavigateToProfile} style={styles.profileContent}>
+        <Image
+          source={{ uri: avatarUri }}
+          style={styles.profileAvatar}
+        />
+        <Text style={styles.profileDescription}>{description}</Text>
         <Text style={styles.profileText}>View and Edit Your Profile</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   center: {
     flex: 1,
@@ -334,6 +367,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  profileAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 10,
+    backgroundColor: '#eee',
+    borderWidth: 2,
+    borderColor: '#ccc',
+  },
+  profileDescription: {
+    fontSize: 14,
+    color: '#444',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   profileText: {
     fontSize: 16,

@@ -33,6 +33,8 @@ export const getUsers = async (userIds: string[]) => {
 export const getUserFriends = async (userId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/users/${userId}/friends`);
+    console.log(`${API_BASE_URL}/users/${userId}/friends`)
+    console.log('User friends:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching user friends:', error);
@@ -152,6 +154,71 @@ export const voteForGame = async (sessionId: number, gameId: number) => {
     return response.status; // Should return 200 if successful
   } catch (error) {
     console.error('Error voting for game:', error);
+    throw error;
+  }
+};
+
+
+
+// GET: /users/{userId}/profile -> {userId, username, avatarUrl, description, isPrivate, ...}
+export const getUserProfile = async (userId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}/profile`);
+    const data = response.data;
+
+    // Map backend fields to frontend fields if needed
+    return {
+      userId: data.userId,
+      // Use 'name' from backend as 'username' if your frontend expects 'username'
+      username: data.username || data.name || '',
+      avatarUrl: data.avatarUrl || data.imageUrl || '',
+      description: data.description || '',
+      isPrivate: data.isPrivate ?? false,
+      // Add any other fields you expect here
+    };
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
+};
+
+// PUT: /users/{userId}/profile -> {description, isPrivate} -> updated profile
+export const updateUserProfile = async (
+  userId: string,
+  profile: { description?: string; isPrivate?: boolean }
+) => {
+  try {
+    // The backend expects PUT /{userId}
+    const response = await axios.put(`${API_BASE_URL}/${userId}`, profile);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+// POST: /users/{userId}/avatar -> multipart/form-data {avatar: file} -> {avatarUrl}
+export const uploadUserAvatar = async (userId: string, imageUri: string) => {
+  try {
+    const formData = new FormData();
+    formData.append('avatar', {
+      uri: imageUri,
+      name: 'avatar.png',
+      type: 'image/png',
+    } as any);
+
+    const response = await axios.post(
+      `${API_BASE_URL}/users/${userId}/avatar`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading user avatar:', error);
     throw error;
   }
 };
