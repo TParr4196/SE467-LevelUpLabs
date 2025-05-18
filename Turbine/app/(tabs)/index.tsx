@@ -7,6 +7,7 @@ import { getUserFriends, getUsers } from '@/utils/api';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { TouchableOpacity, FlatList } from 'react-native';
 import { Game } from '@/types/game';
+import { Friend } from '@/types/friend';
 
 // Define the type for your navigation routes
 type RootStackParamList = {
@@ -14,45 +15,19 @@ type RootStackParamList = {
   'friends': undefined;
   'profile': undefined;
 };
+import { useAppData } from '@/app/context/AppDataContext'; // new import
 
 export default function HomeScreen() {
   const bounceAnim = useRef(new Animated.Value(0)).current;
-  const [games, setGames] = React.useState<Game[]>([]);
-  type Friend = {
-    userId: string;
-    name: string;
-    imageUrl: string;
-  };
-  
-  const [friendsDetails, setFriendsDetails] = useState<Friend[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { games, friends, loading, error } = useAppData(); // use context
 
-  // Profile state for the right-side profile panel
   const [profile, setProfile] = useState<{ avatarUri: string; description: string }>({
     avatarUri: 'https://www.gravatar.com/avatar/?d=mp',
     description: 'This is your profile description.',
   });
 
   useEffect(() => {
-    const userId = DEFAULT_USER_ID; // Replace with actual user ID if needed
-    fetchUserGames(userId).then((fetchedGames) => {
-      console.log('Fetched games:', fetchedGames);
-      setGames(fetchedGames);
-    });
-
-    const fetchFriends = async () => {
-      try {
-        // Fetch user details for the friend IDs
-        const users = await getUserFriends(userId);
-        setFriendsDetails(users);
-      } catch (err) {
-        console.error('Error fetching friends:', err);
-        setError('Failed to load friends. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    const userId = DEFAULT_USER_ID;
 
     const fetchProfile = async () => {
       try {
@@ -65,11 +40,10 @@ export default function HomeScreen() {
           description: data.description || 'This is your profile description.',
         });
       } catch (err) {
-        // Optionally handle error
+        // Handle profile error if needed
       }
     };
 
-    fetchFriends();
     fetchProfile();
   }, []);
 
@@ -92,12 +66,12 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: 'darkgreen' }]}>
       <View style={styles.contentWrapper}>
-      <Banner bounceAnim={bounceAnim} />
-      <View style={styles.mainContent}>
-        <GameLibrary games={games} />
-        <FriendsContainer friends={friendsDetails} />
-        <ProfileContainer avatarUri={profile.avatarUri} description={profile.description} />
-      </View>
+        <Banner bounceAnim={bounceAnim} />
+        <View style={styles.mainContent}>
+          <GameLibrary games={games} />
+          <FriendsContainer friends={friends} />
+          <ProfileContainer avatarUri={profile.avatarUri} description={profile.description} />
+        </View>
       </View>
     </View>
   );
