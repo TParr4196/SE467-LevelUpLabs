@@ -188,8 +188,13 @@ export const updateUserProfile = async (
   profile: { description?: string; isPrivate?: boolean }
 ) => {
   try {
-    // The backend expects PUT /{userId}
-    const response = await axios.put(`${API_BASE_URL}/${userId}`, profile);
+    console.log('Updating user ID:', userId);
+    console.log('Updating user profile:', profile);
+
+    // The backend expects PUT /{userId}`
+      console.log('Updated profile:', `${API_BASE_URL}/users/${userId}`);
+    const response = await axios.put(`${API_BASE_URL}/users/${userId}`, profile);
+  
     return response.data;
   } catch (error) {
     console.error('Error updating user profile:', error);
