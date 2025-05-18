@@ -180,6 +180,36 @@ def lambda_handler(event, context):
                 print(f"Error during DeleteItem operations: {e}")
                 statusCode = 500
                 body = f"Error: Failed to delete game from user's collection. {str(e)}"
+                
+        elif event['routeKey'] == "PUT /users/{userId}":
+            user_id = event['pathParameters'].get('userId')
+            if not user_id:
+                raise KeyError("Missing 'userId' path parameter")
+
+            # Parse the request body
+            request_body = json.loads(event.get('body', '{}'))
+            update_expression = []
+            expression_attribute_values = {}
+
+            # Only update provided fields
+            for field in ['name', 'imageUrl', 'description']:
+                if field in request_body:
+                    update_expression.append(f"{field} = :{field}")
+                    expression_attribute_values[f":{field}"] = request_body[field]
+
+            if not update_expression:
+                raise KeyError("No updatable fields provided in request body")
+
+            # Update the user in DynamoDB
+            users_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression="SET " + ", ".join(update_expression),
+                ExpressionAttributeValues=expression_attribute_values
+            )
+
+            body = {
+                "message": f"User {user_id} updated successfully."
+            }
 
         # if event['routeKey'] == "GET /test":
         #     body = {
