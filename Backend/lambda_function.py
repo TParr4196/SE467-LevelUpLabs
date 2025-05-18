@@ -8,6 +8,7 @@ dynamodb = boto3.resource("dynamodb")
 users_table = dynamodb.Table('users')
 user_games_map_table = dynamodb.Table('user_gamesOwned_map')
 games_table = dynamodb.Table('games')
+user_friends_map_table = dynamodb.Table('user_friends_map')
 
 def lambda_handler(event, context):
     print(event)
@@ -48,6 +49,7 @@ def lambda_handler(event, context):
                         'name': user_item.get('name', ''),
                         'imageUrl': user_item.get('imageUrl', ''),
                         'gamesOwned': games_owned,  # List of game IDs owned by the user
+                        'description': user_item.get('description','')
                     })
             body = users
         
@@ -55,33 +57,46 @@ def lambda_handler(event, context):
         elif event['routeKey'] == "GET /games":
             # Extract game IDs from query parameters
             game_ids = event.get('queryStringParameters', {}).get('ids', '')
-            if not game_ids:
-                raise KeyError("Missing 'ids' query parameter")
 
-            # Split the game IDs into a list
-            game_ids_list = game_ids.split(',')
-
-            # Query the DynamoDB table for each game ID
             games = []
-            for game_id in game_ids_list:
-                response = games_table.get_item(
-                    Key={
-                        'gameId': game_id
-                    }
-                )
-                item = response.get("Item")
-                if item:
+            if game_ids:
+                # Split the game IDs into a list
+                game_ids_list = game_ids.split(',')
+
+                # Query the DynamoDB table for each game ID
+                for game_id in game_ids_list:
+                    response = games_table.get_item(
+                        Key={
+                            'gameId': game_id
+                        }
+                    )
+                    item = response.get("Item")
+                    if item:
+                        games.append({
+                            'gameId': item['gameId'],
+                            'name': item['name'],
+                            'genres': list(item.get('genres', [])),
+                            'rating': str(item.get('rating', '')),
+                            'imageUrl': item.get('imageUrl', ''),
+                            'averagePlaytime': item.get('averagePlaytime', ''),
+                            'recommendedPlayers': item.get('recommendedPlayers', '')
+                        })
+            else:
+                # No ids provided, scan for up to 30 games
+                scan_response = games_table.scan(Limit=30)
+                for item in scan_response.get("Items", []):
                     games.append({
                         'gameId': item['gameId'],
                         'name': item['name'],
-                        'genres': list(item.get('genres', [])),  # Default to an empty list if not present
-                        'rating': str(item.get('rating', '')),  # Convert rating to string
+                        'genres': list(item.get('genres', [])),
+                        'rating': str(item.get('rating', '')),
                         'imageUrl': item.get('imageUrl', ''),
                         'averagePlaytime': item.get('averagePlaytime', ''),
                         'recommendedPlayers': item.get('recommendedPlayers', '')
                     })
 
             body = games
+
         
         # Add a game to a user's personal collection
         elif event['routeKey'] == "POST /users/{userId}/games":
@@ -181,61 +196,75 @@ def lambda_handler(event, context):
                 statusCode = 500
                 body = f"Error: Failed to delete game from user's collection. {str(e)}"
 
-        # if event['routeKey'] == "GET /test":
-        #     body = {
-        #         "message": "Hello from github actions! Checking if API autoupdates.",
-        #     }
-        # if event['routeKey'] == "DELETE /items/{id}":
-        #     table.delete_item(
-        #         Key={
-        #             'id': event['pathParameters']['id'],
-        #             'value': 'items'
-        #         }
-        #     )
-        #     body = 'Deleted item ' + event['pathParameters']['id']
 
-        # elif event['routeKey'] == "GET /items/{id}":
-        #     response = table.get_item(
-        #         Key={
-        #             'id': event['pathParameters']['id'],
-        #             'value': 'items'
-        #         }
-        #     )
-        #     item = response.get("Item")
-        #     if item:
-        #         body = {
-        #             'price': float(item['price']),
-        #             'id': item['id'],
-        #             'value': 'items',
-        #             'name': item['name']
-        #         }
-        #     else:
-        #         statusCode = 404
-        #         body = "Item not found"
+        elif event['routeKey'] == "GET /users/{userId}/friends":
+            user_id = event['pathParameters'].get('userId')
+            if not user_id:
+                raise KeyError("Missing 'userId' path parameter")
 
-        # elif event['routeKey'] == "GET /items":
-        #     response = table.scan()
-        #     items = response.get("Items", [])
-        #     body = []
-        #     for item in items:
-        #         body.append({
-        #             'price': float(item['price']),
-        #             'id': item['id'],
-        #             'value': 'items',
-        #             'name': item['name']
-        #         })
+            try:
+                # Query the user_friends_map_table for friends of the user
+                friends_response = user_friends_map_table.query(
+                    KeyConditionExpression=boto3.dynamodb.conditions.Key('entityId').eq(user_id)
+                )
+                friend_ids = [item['relatedId'] for item in friends_response.get('Items', [])]
 
-        # elif event['routeKey'] == "PUT /items":
-        #     requestJSON = json.loads(event['body'])
-        #     table.put_item(
-        #         Item={
-        #             'id': requestJSON['id'],
-        #             'value': 'items',
-        #             'price': Decimal(str(requestJSON['price'])),
-        #             'name': requestJSON['name']
-        #         }
-        #     )
-        #     body = f"Put item {requestJSON['id']} {requestJSON['value']}"
+                # Fetch each friend's user data from the users table
+                friends = []
+                for fid in friend_ids:
+                    user_response = users_table.get_item(Key={'userId': fid})
+                    user_item = user_response.get("Item")
+                    if user_item:
+                        friends.append({
+                            'userId': user_item.get('userId', ''),
+                            'name': user_item.get('name', ''),
+                            'imageUrl': user_item.get('imageUrl', ''),
+                            # Add any other fields you want to return
+                        })
+                
+                body = friends
+                # body = {
+                #     "userId": user_id,
+                #     "friends": friends  # List of friend user objects
+                # }
+
+            except Exception as e:
+                print(f"Error during friends query: {e}")
+                statusCode = 500
+                body = f"Error: Failed to get user's friends. {str(e)}"
+            
+
+        elif event['routeKey'] == "PUT /users/{userId}":
+
+            user_id = event['pathParameters'].get('userId')
+            if not user_id:
+                raise KeyError("Missing 'userId' path parameter")
+
+            # Parse the request body
+            request_body = json.loads(event.get('body', '{}'))
+            update_expression = []
+            expression_attribute_values = {}
+
+            # Only update provided fields
+            for field in ['imageUrl', 'description']:
+                if field in request_body:
+                    update_expression.append(f"{field} = :{field}")
+                    expression_attribute_values[f":{field}"] = request_body[field]
+
+            if not update_expression:
+                raise KeyError("No updatable fields provided in request body")
+
+            # Update the user in DynamoDB
+            users_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression="SET " + ", ".join(update_expression),
+                ExpressionAttributeValues=expression_attribute_values
+            )
+
+            body = {
+                "message": f"User {user_id} updated successfully."
+            }
+
 
     except KeyError as e:
         print(f"KeyError: {e}")
