@@ -34,6 +34,15 @@ export const styles = StyleSheet.create({
         padding: 16,
         alignItems: 'center',
     },
+    scrollableModalContent: {
+        width: '90%',
+        maxHeight: 500,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 20,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+    },
     modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
