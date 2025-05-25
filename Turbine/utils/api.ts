@@ -58,6 +58,17 @@ export const getGames = async (gameIds: string[] | null = null) => {
   }
 };
 
+// GET: /guilds -> [{guildId, name, imageUrl, members: [userId, ...]}, ...]
+export const getAllGuilds = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/guilds`);
+    return response.data; // Array of guild objects
+  } catch (error) {
+    console.error('Error fetching guilds:', error);
+    throw error;
+  }
+};
+
 // POST: /users/{userId}/games -> {name: <>, uuid: <>} -> {message: <>}
 export const postToCollection = async (userId: string, gameDetails: { name?: string; uuid?: string }) => {
   try {
