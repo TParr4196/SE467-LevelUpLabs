@@ -5,7 +5,7 @@ import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, Modal, Scrol
 import { getGuildDetails } from '@/utils/api';
 
 import GameLibraryScreen from './game-library'; // Import the GameLibraryScreen
-import {DEFAULT_USER_ID, DEFAULT_FRIEND_IDS} from '@/utils/constants'; // HARD CODED FRIENDS
+import {DEFAULT_USER_ID} from '@/utils/constants'; // HARD CODED FRIENDS
 import { getUserFriends, getUsers } from '@/utils/api';
 import { useAppData } from '../context/AppDataContext';
 
@@ -48,9 +48,6 @@ export default function GuildsFriendsScreen() {
           // Fetch guild details
           // const guilds = await getGuildDetails();
           // setGuildsDetails(guilds);
-        } else {
-          const friends = await getUsers(DEFAULT_FRIEND_IDS);
-          setFriendsDetails(friends);
         }
         // Fetch user details for the friend IDs
         const users = await getUserFriends(DEFAULT_USER_ID);

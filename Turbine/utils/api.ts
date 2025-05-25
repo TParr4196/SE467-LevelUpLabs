@@ -93,7 +93,7 @@ export const deleteFromCollection = async (userId: string, gameId: string) => {
 
 
 // GET: /guilds/guildId -> {guildId:<>, guildName:<>, img:<>, members:[userId, userId, ...], log:<>}
-export const getGuildDetails = async (guildId: number) => {
+export const getGuildDetails = async (guildId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/guilds/${guildId}`);
     return response.data;
@@ -104,7 +104,7 @@ export const getGuildDetails = async (guildId: number) => {
 };
 
 // PUT: /guilds/guildId -> {guildName:, img:}
-export const updateGuildDetails = async (guildId: number, guildDetails: { guildName: string; img: string }) => {
+export const updateGuildDetails = async (guildId: string, guildDetails: { guildName: string; img: string }) => {
   try {
     const response = await axios.put(`${API_BASE_URL}/guilds/${guildId}`, guildDetails);
     return response.data;
@@ -115,7 +115,7 @@ export const updateGuildDetails = async (guildId: number, guildDetails: { guildN
 };
 
 // POST: /guilds/guildId/members -> {userId:<>, role:<>} -> 200
-export const addGuildMember = async (guildId: number, memberDetails: { userId: number; role: string }) => {
+export const addGuildMember = async (guildId: string, memberDetails: { userId: string; role: string }) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/guilds/${guildId}/members`, memberDetails);
     return response.status; // Should return 200 if successful
@@ -126,7 +126,7 @@ export const addGuildMember = async (guildId: number, memberDetails: { userId: n
 };
 
 // POST: /session -> {gameIds: [gameId, gameId, ...], userIds: [userId, userId, ...]} -> 200
-export const createSession = async (sessionDetails: { gameIds: number[]; userIds: number[] }) => {
+export const createSession = async (sessionDetails: { gameIds: string[]; userIds: string[] }) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/session`, sessionDetails);
     return response.status; // Should return 200 if successful
@@ -137,7 +137,7 @@ export const createSession = async (sessionDetails: { gameIds: number[]; userIds
 };
 
 // GET: /sessions/sessionId -> {sessionId: <>} -> {gameIds: [gameId, gameId, ...], userIds: [userId, userId, ...]}
-export const getSessionDetails = async (sessionId: number) => {
+export const getSessionDetails = async (sessionId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/sessions/${sessionId}`);
     return response.data;
@@ -148,7 +148,7 @@ export const getSessionDetails = async (sessionId: number) => {
 };
 
 // DELETE: /sessions/sessionId -> {sessionId: <>} -> 200
-export const deleteSession = async (sessionId: number) => {
+export const deleteSession = async (sessionId: string) => {
   try {
     const response = await axios.delete(`${API_BASE_URL}/sessions/${sessionId}`);
     return response.status; // Should return 200 if successful
@@ -159,7 +159,7 @@ export const deleteSession = async (sessionId: number) => {
 };
 
 // GET: /sessions/sessionId/votes -> {gameId: <>} -> 200
-export const voteForGame = async (sessionId: number, gameId: number) => {
+export const voteForGame = async (sessionId: string, gameId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/sessions/${sessionId}/votes`, { params: { gameId } });
     return response.status; // Should return 200 if successful
