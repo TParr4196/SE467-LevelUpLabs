@@ -9,6 +9,8 @@ users_table = dynamodb.Table('users')
 user_games_map_table = dynamodb.Table('user_gamesOwned_map')
 games_table = dynamodb.Table('games')
 user_friends_map_table = dynamodb.Table('user_friends_map')
+guilds_table = dynamodb.Table('guilds')
+guild_members_map_table = dynamodb.Table('guild_members_map')
 
 def lambda_handler(event, context):
     print(event)
@@ -96,6 +98,31 @@ def lambda_handler(event, context):
                     })
 
             body = games
+
+        elif event['routeKey'] == "GET /guilds":
+            try:
+                # Scan the guild table to get all guilds
+                guilds_response = guilds_table.scan()
+                guilds = []
+                for guild_item in guilds_response.get("Items", []):
+                    guild_id = guild_item.get('guildId', '')
+                    # Query the guild_member_map table for members of this guild
+                    members_response = guild_members_map_table.query(
+                        KeyConditionExpression=boto3.dynamodb.conditions.Key('entityId').eq(guild_id)
+                    )
+                    members = [item['relatedId'] for item in members_response.get('Items', [])]
+                    guilds.append({
+                        'guildId': guild_id,
+                        'name': guild_item.get('name', ''),
+                        'imageUrl': guild_item.get('imageUrl', ''),
+                        'members': members
+                    })
+                body = guilds
+            except Exception as e:
+                print(f"Error during guilds query: {e}")
+                statusCode = 500
+                body = f"Error: Failed to get guilds. {str(e)}"
+
 
         
         # Add a game to a user's personal collection
@@ -294,6 +321,7 @@ def lambda_handler(event, context):
             body = {
                 "message": f"User {user_id} updated successfully."
             }
+
 
 
     except KeyError as e:
