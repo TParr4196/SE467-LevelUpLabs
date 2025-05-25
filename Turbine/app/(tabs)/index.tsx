@@ -1,4 +1,4 @@
-import { Text, View, Image, Animated } from 'react-native';
+import { Text, View, Image, Animated, ScrollView, Dimensions } from 'react-native';
 import React, { useRef, useEffect, useState } from 'react';
 import { DEFAULT_USER_ID } from '@/utils/constants';
 import { getUsers } from '@/utils/api';
@@ -6,12 +6,14 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { TouchableOpacity, FlatList } from 'react-native';
 import { Game } from '@/types/game';
 import { styles } from '@/app/styles/homeScreenStyles';
+const { height: screenHeight } = Dimensions.get('window');
 
 // Define the type for your navigation routes
 type RootStackParamList = {
   'game-library': undefined;
   'friends': undefined;
   'profile': undefined;
+  'play-now': { selectedFriends: any[] };
 };
 import { useAppData } from '@/app/context/AppDataContext'; // new import
 
@@ -58,17 +60,37 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: 'darkgreen' }]}>
-      <View style={styles.contentWrapper}>
-        <Banner bounceAnim={bounceAnim} />
-        <View style={styles.mainContent}>
-          <GameLibrary games={games} />
-          <FriendsContainer friends={friends} />
-          <ProfileContainer avatarUri={profile?.avatarUri || "https://www.gravatar.com/avatar/?d=mp"} description={profile?.description || ""} />
+  <View style={[styles.container, { backgroundColor: 'darkgreen' }]}>
+    <View style={styles.contentWrapper}>
+      <Banner bounceAnim={bounceAnim} />
+
+      <View style={styles.mainContent}>
+        {/* Each container gets a fixed height and own scroll */}
+        
+        <View style={{ height: screenHeight * 0.65 }}>
+          <ScrollView>
+            <GameLibrary games={games} />
+          </ScrollView>
+        </View>
+
+        <View style={{ height: screenHeight * 0.65 }}>
+          <ScrollView>
+            <FriendsContainer friends={friends} />
+          </ScrollView>
+        </View>
+
+        <View style={{ height: screenHeight * 0.65 }}>
+          <ScrollView>
+            <ProfileContainer
+              avatarUri={profile?.avatarUri || 'https://www.gravatar.com/avatar/?d=mp'}
+              description={profile?.description || ''}
+            />
+          </ScrollView>
         </View>
       </View>
     </View>
-  );
+  </View>
+);
 }
 
 type BannerProps = {
@@ -156,30 +178,53 @@ type FriendsContainerProps = {
 
 function FriendsContainer({ friends }: FriendsContainerProps) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [selectedFriends, setSelectedFriends] = useState<any[]>([]);
 
-  const handleNavigateToFriendDetails = () => {
-    navigation.navigate('friends'); // Ensure 'friend-details' matches the route name in your navigation setup
+  const handleToggleFriend = (friend: any) => {
+    setSelectedFriends((prev) =>
+      prev.some((f) => f.userId === friend.userId)
+        ? prev.filter((f) => f.userId !== friend.userId)
+        : [...prev, friend]
+    );
+  };
+
+  const handleContinue = () => {
+    if (selectedFriends.length > 0) {
+      navigation.navigate('play-now', { selectedFriends });
+    }
   };
 
   return (
     <View style={styles.friendsContainer}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.title}>Your Friends</Text>
+        <Text style={styles.title}>Select Friends to Play With</Text>
       </View>
       <FlatList
         data={friends}
         keyExtractor={(item) => item.userId}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={handleNavigateToFriendDetails} style={styles.card}>
-            <Image source={{ uri: item.imageUrl }} style={styles.image} />
-            <Text style={styles.name}>{item.name}</Text>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const isSelected = selectedFriends.some((f) => f.userId === item.userId);
+          return (
+            <TouchableOpacity
+              onPress={() => handleToggleFriend(item)}
+              style={[styles.card, isSelected && { borderColor: 'green', borderWidth: 2 }]}
+            >
+              <Image source={{ uri: item.imageUrl }} style={styles.image} />
+              <Text style={styles.name}>{item.name}</Text>
+            </TouchableOpacity>
+          );
+        }}
         contentContainerStyle={styles.list}
       />
+      {selectedFriends.length > 0 && (
+        <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
+          <Text style={styles.continueButtonText}>Continue to Games</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
+
 
 type ProfileContainerProps = {
   avatarUri: string;

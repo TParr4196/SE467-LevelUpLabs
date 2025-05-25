@@ -1,4 +1,7 @@
 import { StyleSheet } from 'react-native';
+import { Dimensions } from 'react-native';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   center: {
@@ -62,6 +65,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  
   mainContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -72,6 +76,9 @@ export const styles = StyleSheet.create({
     width: '100%',
     height: 150,
     borderRadius: 8,
+  },
+  horizontalScrollContainer: {
+    flexDirection: 'row',
   },
   sectionHeader: {
     alignItems: 'flex-start',
@@ -164,5 +171,21 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  continueButton: {
+  marginTop: 10,
+  backgroundColor: 'green',
+  padding: 12,
+  borderRadius: 10,
+  alignItems: 'center',
+  },
+  continueButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  scrollContainer: {
+  paddingBottom: 40,
+  paddingHorizontal: 10,
   },
 });
