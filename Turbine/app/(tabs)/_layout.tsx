@@ -36,14 +36,13 @@ export default function TabLayout() {
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
           }}
         />
-        {/* Moved this up one folder since its not being used */}
-        {/* <Tabs.Screen
-          name="explore"
+        <Tabs.Screen
+          name="play-now"
           options={{
-            title: 'Explore',
+            title: 'Play Now',
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
           }}
-        /> */}
+        />
         <Tabs.Screen name="home" options={{ title: 'Home' }} />
         <Tabs.Screen
           name="game-library"
