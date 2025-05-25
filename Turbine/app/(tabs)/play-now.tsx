@@ -20,7 +20,7 @@ const { width } = Dimensions.get('window');
 
 export default function ChooseGameScreen() {
   const { params } = useRoute<any>();
-  const initialSelectedFriends = params.selectedFriends || [];
+  const initialSelectedFriends = params?.selectedFriends || [];
   const { games, friends: allFriends } = useAppData();
 
   const [selectedFriends, setSelectedFriends] = useState(initialSelectedFriends);

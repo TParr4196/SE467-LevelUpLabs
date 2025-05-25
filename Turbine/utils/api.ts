@@ -125,6 +125,19 @@ export const addGuildMember = async (guildId: string, memberDetails: { userId: s
   }
 };
 
+// DELETE: /guilds/guildId/members -> {userId: <>} in body -> 200
+export const removeGuildMember = async (guildId: string, userId: string) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/guilds/${guildId}/members`, {
+      data: { userId }
+    });
+    return response.status; // Should return 200 if successful
+  } catch (error) {
+    console.error('Error removing guild member:', error);
+    throw error;
+  }
+};
+
 // POST: /session -> {gameIds: [gameId, gameId, ...], userIds: [userId, userId, ...]} -> 200
 export const createSession = async (sessionDetails: { gameIds: string[]; userIds: string[] }) => {
   try {
