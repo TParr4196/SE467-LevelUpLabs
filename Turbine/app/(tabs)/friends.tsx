@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, Modal, ScrollView, TextInput, Button } from 'react-native';
 
 import { getGuildDetails } from '@/utils/api';
+<<<<<<< HEAD
 import GameLibraryScreen from './game-library';
 import { DEFAULT_USER_ID, DEFAULT_FRIEND_IDS } from '@/utils/constants';
+=======
+
+import GameLibraryScreen from './game-library'; // Import the GameLibraryScreen
+import {DEFAULT_USER_ID} from '@/utils/constants'; // HARD CODED FRIENDS
+>>>>>>> 2f963345c5d57367dda7b72dba4a25aba99adb84
 import { getUserFriends, getUsers } from '@/utils/api';
 import { useAppData } from '../context/AppDataContext';
 import { styles as importedStyles } from '@/app/styles/friendsStyle';
@@ -103,11 +109,14 @@ export default function GuildsFriendsScreen() {
         if (isGuildsView) {
           // const guilds = await getGuildDetails();
           // setGuildsDetails(guilds);
+<<<<<<< HEAD
           const guilds = getFakeGuilds();
           setGuildsDetails(guilds);
         } else {
           const friends = await getUsers(DEFAULT_FRIEND_IDS);
           setFriendsDetails(friends);
+=======
+>>>>>>> 2f963345c5d57367dda7b72dba4a25aba99adb84
         }
         const users = await getUserFriends(DEFAULT_USER_ID);
         setFriendsDetails(users);

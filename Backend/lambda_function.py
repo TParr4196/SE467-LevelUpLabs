@@ -9,6 +9,8 @@ users_table = dynamodb.Table('users')
 user_games_map_table = dynamodb.Table('user_gamesOwned_map')
 games_table = dynamodb.Table('games')
 user_friends_map_table = dynamodb.Table('user_friends_map')
+guilds_table = dynamodb.Table('guilds')
+guild_members_map_table = dynamodb.Table('guild_members_map')
 
 def lambda_handler(event, context):
     print(event)
@@ -96,6 +98,31 @@ def lambda_handler(event, context):
                     })
 
             body = games
+
+        elif event['routeKey'] == "GET /guilds":
+            try:
+                # Scan the guild table to get all guilds
+                guilds_response = guilds_table.scan()
+                guilds = []
+                for guild_item in guilds_response.get("Items", []):
+                    guild_id = guild_item.get('guildId', '')
+                    # Query the guild_member_map table for members of this guild
+                    members_response = guild_members_map_table.query(
+                        KeyConditionExpression=boto3.dynamodb.conditions.Key('entityId').eq(guild_id)
+                    )
+                    members = [item['relatedId'] for item in members_response.get('Items', [])]
+                    guilds.append({
+                        'guildId': guild_id,
+                        'name': guild_item.get('name', ''),
+                        'imageUrl': guild_item.get('imageUrl', ''),
+                        'members': members
+                    })
+                body = guilds
+            except Exception as e:
+                print(f"Error during guilds query: {e}")
+                statusCode = 500
+                body = f"Error: Failed to get guilds. {str(e)}"
+
 
         
         # Add a game to a user's personal collection
@@ -294,6 +321,107 @@ def lambda_handler(event, context):
             body = {
                 "message": f"User {user_id} updated successfully."
             }
+
+        elif event['routeKey'] == "GET /guilds/{guildId}":
+            guild_id = event['pathParameters'].get('guildId')
+            if not guild_id:
+                raise KeyError("Missing 'guildId' path parameter")
+
+            try:
+                # Get the guild details
+                guild_response = guilds_table.get_item(Key={'guildId': guild_id})
+                guild_item = guild_response.get("Item")
+                if not guild_item:
+                    raise KeyError("Guild not found")
+
+                # Query the guild_members_map_table for members of this guild
+                members_response = guild_members_map_table.query(
+                    KeyConditionExpression=boto3.dynamodb.conditions.Key('entityId').eq(guild_id)
+                )
+                members = [item['relatedId'] for item in members_response.get('Items', [])]
+
+                # Build the response object
+                guild_details = {
+                    'guildId': guild_item.get('guildId', ''),
+                    'name': guild_item.get('name', ''),
+                    'imageUrl': guild_item.get('imageUrl', ''),
+                    'members': members
+                }
+                body = guild_details
+            except Exception as e:
+                print(f"Error during guild detail query: {e}")
+                statusCode = 500
+                body = f"Error: Failed to get guild details. {str(e)}"
+
+
+        elif event['routeKey'] == "POST /guilds/{guildId}/members":
+            guild_id = event['pathParameters'].get('guildId')
+            if not guild_id:
+                raise KeyError("Missing 'guildId' path parameter")
+
+            try:
+                # Parse the request body
+                request_body = json.loads(event.get('body', '{}'))
+                user_id = request_body.get('userId')
+                role = request_body.get('role')
+
+                if not user_id or not role:
+                    raise KeyError("Missing 'userId' or 'role' in request body")
+
+                # Add the member to the guild_members_map table
+                guild_members_map_table.put_item(
+                    Item={
+                        'entityId': guild_id,
+                        'relatedId': user_id,
+                        'role': role
+                    }
+                )
+
+                body = {
+                    "message": f"User {user_id} added to guild {guild_id} as {role}."
+                }
+                statusCode = 200
+            except Exception as e:
+                print(f"Error adding guild member: {e}")
+                statusCode = 500
+                body = f"Error: Failed to add member to guild. {str(e)}"
+        
+        elif event['routeKey'] == "DELETE /guilds/{guildId}/members":
+            guild_id = event['pathParameters'].get('guildId')
+            try:
+                # Parse the request body to get userId
+                request_body = json.loads(event.get('body', '{}'))
+                user_id = request_body.get('userId')
+                if not guild_id or not user_id:
+                    raise KeyError("Missing 'guildId' path parameter or 'userId' in body")
+
+                # Check if the member exists
+                response = guild_members_map_table.get_item(
+                    Key={
+                        'entityId': guild_id,
+                        'relatedId': user_id
+                    }
+                )
+                if 'Item' not in response:
+                    statusCode = 404
+                    body = f"User {user_id} is not a member of guild {guild_id}."
+                else:
+                    # Remove the member from the guild_members_map table
+                    guild_members_map_table.delete_item(
+                        Key={
+                            'entityId': guild_id,
+                            'relatedId': user_id
+                        }
+                    )
+                    body = {
+                        "message": f"User {user_id} removed from guild {guild_id}."
+                    }
+                    statusCode = 200
+            except Exception as e:
+                print(f"Error removing guild member: {e}")
+                statusCode = 500
+                body = f"Error: Failed to remove member from guild. {str(e)}"
+
 
 
     except KeyError as e:
