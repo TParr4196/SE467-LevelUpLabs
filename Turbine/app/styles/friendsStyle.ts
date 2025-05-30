@@ -126,6 +126,19 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
   },
+  modalDescription: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalLabel: {
+    fontWeight: 'bold',
+    marginTop: 8,
+    marginBottom: 4,
+    fontSize: 16,
+    color: '#222',
+  },
   inviteItem: {
     paddingVertical: 10,
     borderBottomWidth: 1,
@@ -227,5 +240,25 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
+  },
+  memberItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  memberImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#81b0ff',
+  },
+  memberName: {
+    fontSize: 15,
+    color: '#333',
+  },
+  membersList: {
+    paddingVertical: 8,
   },
 });

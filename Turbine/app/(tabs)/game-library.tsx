@@ -10,7 +10,7 @@ import { styles } from '@/app/styles/gameLibraryStyles';
 
 export default function GameLibraryScreen() {
     const screenWidth = Dimensions.get('window').width;
-    const numColumns = Math.floor(screenWidth / 180);
+    const numColumns = Math.floor(screenWidth / 190); // Can keep as 180 but it cuts off a game.
 
     // Properly type the state variables
     const { games, setGames, error, loading } = useAppData(); // Use context to get and set games

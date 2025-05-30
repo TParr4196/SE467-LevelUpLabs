@@ -1,16 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, Modal, ScrollView, TextInput, Button } from 'react-native';
 
-import { getGuildDetails } from '@/utils/api';
-<<<<<<< HEAD
-import GameLibraryScreen from './game-library';
-import { DEFAULT_USER_ID, DEFAULT_FRIEND_IDS } from '@/utils/constants';
-=======
-
-import GameLibraryScreen from './game-library'; // Import the GameLibraryScreen
-import {DEFAULT_USER_ID} from '@/utils/constants'; // HARD CODED FRIENDS
->>>>>>> 2f963345c5d57367dda7b72dba4a25aba99adb84
-import { getUserFriends, getUsers } from '@/utils/api';
+import { getGuildDetails, getUsers } from '@/utils/api';
 import { useAppData } from '../context/AppDataContext';
 import { styles as importedStyles } from '@/app/styles/friendsStyle';
 
@@ -30,56 +21,9 @@ const styles = StyleSheet.create({
   },
 });
 
-function getFakeGuilds() {
-  return [
-    {
-      id: 1,
-      name: 'Guild Alpha',
-      imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
-    },
-    {
-      id: 2,
-      name: 'Guild Beta',
-      imageUrl: 'https://randomuser.me/api/portraits/women/2.jpg',
-    },
-    {
-      id: 3,
-      name: 'Guild Gamma',
-      imageUrl: 'https://randomuser.me/api/portraits/men/3.jpg',
-    },
-    {
-      id: 4,
-      name: 'Guild Delta',
-      imageUrl: 'https://randomuser.me/api/portraits/women/4.jpg',
-    },
-    {
-      id: 5,
-      name: 'Guild Epsilon',
-      imageUrl: 'https://randomuser.me/api/portraits/men/5.jpg',
-    },
-    {
-      id: 6,
-      name: 'Guild Zeta',
-      imageUrl: 'https://randomuser.me/api/portraits/women/6.jpg',
-    },
-    {
-      id: 7,
-      name: 'Guild Theta',
-      imageUrl: 'https://randomuser.me/api/portraits/men/7.jpg',
-    },
-    {
-      id: 8,
-      name: 'Guild Lambda',
-      imageUrl: 'https://randomuser.me/api/portraits/women/8.jpg',
-    },
-  ];
-}
-
 export default function GuildsFriendsScreen() {
   const [isGuildsView, setIsGuildsView] = useState(false);
-  const [guildsDetails, setGuildsDetails] = useState<any[]>([]);
-  const [friendsDetails, setFriendsDetails] = useState<any[]>([]);
-  const { loading, error, setLoading, setError } = useAppData();
+  const { loading, error, friends, guilds, setError } = useAppData();
 
   const [invitesVisible, setInvitesVisible] = useState(false);
   const [createGuildVisible, setCreateGuildVisible] = useState(false);
@@ -102,45 +46,51 @@ export default function GuildsFriendsScreen() {
   const [removeModalVisible, setRemoveModalVisible] = useState(false);
   const [selectedToRemove, setSelectedToRemove] = useState<any>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        if (isGuildsView) {
-          // const guilds = await getGuildDetails();
-          // setGuildsDetails(guilds);
-<<<<<<< HEAD
-          const guilds = getFakeGuilds();
-          setGuildsDetails(guilds);
-        } else {
-          const friends = await getUsers(DEFAULT_FRIEND_IDS);
-          setFriendsDetails(friends);
-=======
->>>>>>> 2f963345c5d57367dda7b72dba4a25aba99adb84
-        }
-        const users = await getUserFriends(DEFAULT_USER_ID);
-        setFriendsDetails(users);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load data. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [selectedGuild, setSelectedGuild] = useState<any>(null);
+  const [guildDetailsModalVisible, setGuildDetailsModalVisible] = useState(false);
 
-    fetchData();
-  }, [isGuildsView]);
+  const [guildMemberDetails, setGuildMemberDetails] = useState<any[]>([]);
 
   const handleCardPress = (item: any) => {
     console.log('Card pressed:', item);
   };
 
-  const renderCard = ({ item }: { item: any }) => (
-    <TouchableOpacity onPress={() => handleCardPress(item)} style={styles.cardContainer}>
-      <Image source={{ uri: item.imageUrl }} style={styles.profileImage} />
-      <Text style={styles.name}>{item.name}</Text>
-    </TouchableOpacity>
-  );
+  const handleGuildCardPress = async (guild: any) => {
+    try {
+      const details = await getGuildDetails(guild.guildId || guild.id);
+      setSelectedGuild(details);
+
+      // Fetch member details if members is an array of IDs
+      if (details.members && details.members.length > 0) {
+        const users = await getUsers(details.members); // getUsers expects an array of IDs
+        setGuildMemberDetails(users);
+      } else {
+        setGuildMemberDetails([]);
+      }
+
+      setGuildDetailsModalVisible(true);
+    } catch (err) {
+      setError('Failed to load guild details.');
+    }
+  };
+
+  const renderCard = ({ item }: { item: any }) => {
+    if (isGuildsView) {
+      return (
+        <TouchableOpacity onPress={() => handleGuildCardPress(item)} style={styles.guildCardContainer}>
+          <Image source={{ uri: item.imageUrl }} style={styles.guildProfileImage} />
+          <Text style={styles.guildName}>{item.name}</Text>
+        </TouchableOpacity>
+      );
+    }
+    // Friends view
+    return (
+      <TouchableOpacity onPress={() => handleCardPress(item)} style={styles.cardContainer}>
+        <Image source={{ uri: item.imageUrl }} style={styles.profileImage} />
+        <Text style={styles.name}>{item.name}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   const handleAddTag = () => {
     if (gameTagInput.trim() && !gameTags.includes(gameTagInput.trim())) {
@@ -189,11 +139,12 @@ export default function GuildsFriendsScreen() {
 
       {/* List of Guilds or Friends */}
       <FlatList
-        data={isGuildsView ? guildsDetails : friendsDetails}
-        keyExtractor={(item) => item.id || item.userId}
+        data={isGuildsView ? guilds : friends}
+        key={isGuildsView ? 'guilds' : 'friends'}
+        keyExtractor={(item) => item.guildId || item.id || item.userId}
         renderItem={renderCard}
         contentContainerStyle={styles.grid}
-        numColumns={3}
+        numColumns={isGuildsView ? 4 : 3}
       />
 
       {/* Buttons Above Navbar */}
@@ -366,7 +317,7 @@ export default function GuildsFriendsScreen() {
               {isGuildsView ? 'Remove a Guild' : 'Remove a Friend'}
             </Text>
             <ScrollView style={{ maxHeight: 300, width: '100%' }}>
-              {(isGuildsView ? guildsDetails : friendsDetails).map(item => {
+              {(isGuildsView ? guilds : friends).map(item => {
                 const isSelected =
                   (selectedToRemove?.id && selectedToRemove.id === item.id) ||
                   (selectedToRemove?.userId && selectedToRemove.userId === item.userId);
@@ -437,6 +388,49 @@ export default function GuildsFriendsScreen() {
             <View style={styles.buttonRow}>
               <View style={styles.buttonWrapper}>
                 <Button title="Close" onPress={() => setInvitesVisible(false)} color="#0a7ea4" />
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Guild Details Modal */}
+      <Modal
+        visible={guildDetailsModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setGuildDetailsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {selectedGuild && (
+              <>
+                <Text style={styles.modalTitle}>{selectedGuild.name}</Text>
+                <Text style={styles.modalDescription}>{selectedGuild.description}</Text>
+                {selectedGuild.imageUrl && (
+                  <Image source={{ uri: selectedGuild.imageUrl }} style={styles.guildProfileImage} />
+                )}
+                <Text style={styles.modalLabel}>Members:</Text>
+                <FlatList
+                  data={guildMemberDetails}
+                  keyExtractor={(member) => member.userId}
+                  renderItem={({ item }) => (
+                    <View style={styles.memberItem}>
+                      <Image source={{ uri: item.imageUrl }} style={styles.memberImage} />
+                      <Text style={styles.memberName}>{item.name}</Text>
+                    </View>
+                  )}
+                  contentContainerStyle={styles.membersList}
+                />
+              </>
+            )}
+            <View style={styles.buttonRow}>
+              <View style={styles.buttonWrapper}>
+                <Button
+                  title="Close"
+                  onPress={() => setGuildDetailsModalVisible(false)}
+                  color="#0a7ea4"
+                />
               </View>
             </View>
           </View>
