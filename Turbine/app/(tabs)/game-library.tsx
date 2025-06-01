@@ -10,15 +10,15 @@ import { styles } from '@/app/styles/gameLibraryStyles';
 
 export default function GameLibraryScreen() {
     const screenWidth = Dimensions.get('window').width;
-    const numColumns = Math.floor(screenWidth / 180);
+    const numColumns = Math.floor(screenWidth / 190); // Can keep as 180 but it cuts off a game.
 
     // Properly type the state variables
     const { games, setGames, error, loading } = useAppData(); // Use context to get and set games
     const [allFilteredGames, setAllFilteredGames] = useState<Game[]>([]); // Source of truth for filtered games
-    
+
     const [addModalVisible, setAddModalVisible] = useState(false);
     const [selectedGameToAdd, setSelectedGameToAdd] = useState<Game | null>(null);
-    
+
     const [removeModalVisible, setRemoveModalVisible] = useState(false);
     const [selectedGameToRemove, setSelectedGameToRemove] = useState<Game | null>(null);
 
@@ -42,7 +42,7 @@ export default function GameLibraryScreen() {
 
             console.log('Games in library:', games);
             console.log('All default games:', allGameObjects);
-            
+
             // Filter out games that are already in the user's library
             const filteredGames = allGameObjects.filter(
                 (game) => !games.some((g) => g.gameId === game.gameId)
@@ -60,17 +60,17 @@ export default function GameLibraryScreen() {
         setSelectedGameToAdd(null);
         getAllDefaultGames(); // Fetch and filter the default games
         setAddModalVisible(true);
-        
+
     };
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
-    
+
         // Dynamically filter the searchResults based on the query
         const filteredResults = allFilteredGames.filter((game) =>
             game.name.toLowerCase().includes(query.toLowerCase())
         );
-    
+
         setSearchResults(filteredResults);
     };
 
@@ -159,7 +159,7 @@ export default function GameLibraryScreen() {
                 onRequestClose={() => setAddModalVisible(false)}
             >
                 <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
+                    <View style={styles.scrollableModalContent}>
                         <Text style={styles.modalTitle}>Add a Game</Text>
                         <TextInput
                             style={styles.searchBox}
@@ -181,6 +181,7 @@ export default function GameLibraryScreen() {
                                     <Text style={styles.searchResultText}>{item.name}</Text>
                                 </TouchableOpacity>
                             )}
+                            style={{ maxHeight: 350 }}
                         />
                         <Button
                             title="Add Selected Game"
@@ -191,7 +192,7 @@ export default function GameLibraryScreen() {
                     </View>
                 </View>
             </Modal>
-            
+
             {/* --- Remove Game Modal --- */}
             <Modal
                 visible={removeModalVisible}
