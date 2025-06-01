@@ -142,7 +142,7 @@ export const removeGuildMember = async (guildId: string, userId: string) => {
 export const createSession = async (sessionDetails: { gameIds: string[]; userIds: string[] }) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/sessions`, sessionDetails);
-    return response.data; // 
+    return response.data;
   } catch (error) {
     console.error('Error creating session:', error);
     throw error;
