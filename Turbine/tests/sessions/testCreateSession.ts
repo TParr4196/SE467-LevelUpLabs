@@ -9,7 +9,6 @@ const TEST_GAME_IDS = [
 const TEST_USER_IDS = [
   '3f9a9b0c-7db3-4f65-a2e3-c019d893f187',
   'a07aef8e-8bd5-4b91-bfcd-36570e2b15f9',
-  'e6c90de2-983f-4e61-9485-4024fc3d8f87'
 ];
 
 (async () => {

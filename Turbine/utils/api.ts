@@ -142,7 +142,7 @@ export const removeGuildMember = async (guildId: string, userId: string) => {
 export const createSession = async (sessionDetails: { gameIds: string[]; userIds: string[] }) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/sessions`, sessionDetails);
-    return response.data; // 
+    return response.data;
   } catch (error) {
     console.error('Error creating session:', error);
     throw error;
@@ -178,6 +178,20 @@ export const voteForGame = async (sessionId: string, gameId: string) => {
     return response.status; // Should return 200 if successful
   } catch (error) {
     console.error('Error voting for game:', error);
+    throw error;
+  }
+};
+
+// POST: /sessions/{sessionId}/members -> {userIds: [<>, <>]} -> 200
+export const addSessionMembers = async (sessionId: string, userIds: string[]) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/sessions/${sessionId}/members`,
+      { userIds }
+    );
+    return response.status; // Should return 200 if successful
+  } catch (error) {
+    console.error('Error adding session members:', error);
     throw error;
   }
 };

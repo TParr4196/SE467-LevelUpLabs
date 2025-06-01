@@ -14,6 +14,21 @@ guilds_table = dynamodb.Table('guilds')
 guild_members_map_table = dynamodb.Table('guild_members_map')
 sessions_table = dynamodb.Table('sessions')
 
+
+def convert_sets_to_lists(obj):
+    if isinstance(obj, dict):
+        return {k: convert_sets_to_lists(v) for k, v in obj.items()}
+    elif isinstance(obj, set):
+        return list(obj)
+    elif isinstance(obj, list):
+        return [convert_sets_to_lists(i) for i in obj]
+    elif isinstance(obj, Decimal):
+        # Convert to int if possible, else float
+        return int(obj) if obj % 1 == 0 else float(obj)
+    else:
+        return obj
+    
+
 def lambda_handler(event, context):
     print(event)
     body = {}
@@ -47,12 +62,19 @@ def lambda_handler(event, context):
                     )
                     games_owned = [game['relatedId'] for game in games_response.get('Items', [])]
 
+                    # Get guilds for this user from guild_members_map_table (by relatedId)
+                    guilds_response = guild_members_map_table.scan(
+                        FilterExpression=boto3.dynamodb.conditions.Attr('relatedId').eq(user_id)
+                    )
+                    guild_ids = [item['entityId'] for item in guilds_response.get('Items', [])]
+                    
                     # Append user details with gamesOwned
                     users.append({
                         'userId': user_item.get('userId', ''),
                         'name': user_item.get('name', ''),
                         'imageUrl': user_item.get('imageUrl', ''),
                         'gamesOwned': games_owned,  # List of game IDs owned by the user
+                        'guildIds': guild_ids,      # List of guild IDs the user is a member of
                         'description': user_item.get('description','')
                     })
             body = users
@@ -440,7 +462,7 @@ def lambda_handler(event, context):
                 game_ids_map = {}
                 for gid in game_ids:
                     game_ids_map[gid] = {
-                        "votes": [0]  # or ["0"] if you want string numbers
+                        "votes": 0  # or ["0"] if you want string numbers
                     }
                 
                 session_id = str(uuid.uuid4())
@@ -463,6 +485,127 @@ def lambda_handler(event, context):
                 print(f"Error creating session: {e}")
                 statusCode = 500
                 body = f"Error: Failed to create session. {str(e)}"
+        
+        
+        elif event['routeKey'] == "GET /sessions/{sessionId}":
+            try:
+                session_id = event['pathParameters'].get('sessionId')
+                if not session_id:
+                    raise KeyError("Missing 'sessionId' path parameter")
+
+                # Fetch the session from DynamoDB
+                response = sessions_table.get_item(
+                    Key={'sessionId': session_id}
+                )
+                session_item = response.get("Item")
+                if not session_item:
+                    statusCode = 404
+                    body = f"Session {session_id} not found."
+                else:
+                    statusCode = 200
+                    body = convert_sets_to_lists(session_item)
+            except Exception as e:
+                print(f"Error fetching session details: {e}")
+                statusCode = 500
+                body = f"Error: Failed to fetch session details. {str(e)}"
+
+
+        elif event['routeKey'] == "DELETE /sessions/{sessionId}":
+            try:
+                session_id = event['pathParameters'].get('sessionId')
+                if not session_id:
+                    raise KeyError("Missing 'sessionId' path parameter")
+
+                # Attempt to delete the session
+                response = sessions_table.delete_item(
+                    Key={'sessionId': session_id}
+                )
+                statusCode = 200
+                body = {"message": f"Session {session_id} deleted successfully."}
+
+            except Exception as e:
+                print(f"Error deleting session: {e}")
+                statusCode = 500
+                body = f"Error: Failed to delete session. {str(e)}"
+
+
+        elif event['routeKey'] == "GET /sessions/{sessionId}/votes":
+            try:
+                session_id = event['pathParameters'].get('sessionId')
+                game_id = event.get('queryStringParameters', {}).get('gameId')
+                if not session_id or not game_id:
+                    raise KeyError("Missing 'sessionId' path parameter or 'gameId' query parameter")
+
+                # Increment the vote count for the game in the session
+                response = sessions_table.update_item(
+                    Key={'sessionId': session_id},
+                    UpdateExpression=f"SET gameIds.#gid.votes = if_not_exists(gameIds.#gid.votes, :zero) + :inc",
+                    ExpressionAttributeNames={
+                        "#gid": game_id
+                    },
+                    ExpressionAttributeValues={
+                        ":inc": 1,
+                        ":zero": 0
+                    },
+                    ReturnValues="UPDATED_NEW"
+                )
+
+                body = convert_sets_to_lists({
+                    "message": f"Vote added for game {game_id} in session {session_id}.",
+                    "votes": response["Attributes"]["gameIds"][game_id]["votes"]
+                })
+                statusCode = 200
+            except Exception as e:
+                print(f"Error voting for game: {e}")
+                statusCode = 500
+                body = f"Error: Failed to vote for game. {str(e)}"
+
+
+        elif event['routeKey'] == "POST /sessions/{sessionId}/members":
+            try:
+                session_id = event['pathParameters'].get('sessionId')
+                if not session_id:
+                    raise KeyError("Missing 'sessionId' path parameter")
+
+                # Parse the request body for userIds
+                request_body = json.loads(event.get('body', '{}'))
+                new_user_ids = request_body.get('userIds', [])
+                if not isinstance(new_user_ids, list) or not new_user_ids:
+                    raise KeyError("Missing or invalid 'userIds' in request body")
+
+                # Fetch current userIds from the session
+                session_response = sessions_table.get_item(Key={'sessionId': session_id})
+                session_item = session_response.get("Item")
+                current_user_ids = set(session_item.get('userIds', [])) if session_item else set()
+
+                # Filter out userIds that are already present
+                filtered_user_ids = [uid for uid in new_user_ids if uid not in current_user_ids]
+                if not filtered_user_ids:
+                    body = {
+                        "message": "No new userIds to add.",
+                        "userIds": list(current_user_ids)
+                    }
+                    statusCode = 200
+                else:
+                    # Append only the new userIds
+                    response = sessions_table.update_item(
+                        Key={'sessionId': session_id},
+                        UpdateExpression="SET userIds = list_append(if_not_exists(userIds, :empty_list), :new_user_ids)",
+                        ExpressionAttributeValues={
+                            ":new_user_ids": filtered_user_ids,
+                            ":empty_list": []
+                        },
+                        ReturnValues="UPDATED_NEW"
+                    )
+                    body = {
+                        "message": f"Added users to session {session_id}.",
+                        "userIds": response["Attributes"]["userIds"]
+                    }
+                    statusCode = 200
+            except Exception as e:
+                print(f"Error adding session members: {e}")
+                statusCode = 500
+                body = f"Error: Failed to add session members. {str(e)}"
 
 
     except KeyError as e:
