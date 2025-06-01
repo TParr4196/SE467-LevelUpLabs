@@ -1,5 +1,6 @@
 import json
 import boto3
+import uuid
 from decimal import Decimal
 
 client = boto3.client('dynamodb')
@@ -11,6 +12,7 @@ games_table = dynamodb.Table('games')
 user_friends_map_table = dynamodb.Table('user_friends_map')
 guilds_table = dynamodb.Table('guilds')
 guild_members_map_table = dynamodb.Table('guild_members_map')
+sessions_table = dynamodb.Table('sessions')
 
 def lambda_handler(event, context):
     print(event)
@@ -422,6 +424,45 @@ def lambda_handler(event, context):
                 statusCode = 500
                 body = f"Error: Failed to remove member from guild. {str(e)}"
 
+
+        elif event['routeKey'] == "POST /sessions":
+            try:
+                # Parse the request body
+                request_body = json.loads(event.get('body', '{}'))
+                game_ids = request_body.get('gameIds', [])
+                user_ids = request_body.get('userIds', [])
+
+                if not game_ids or not user_ids:
+                    raise KeyError("Missing 'gameIds', or 'userIds' in request body")
+
+                # Build the gameIds map as required by DynamoDB
+                # Each gameId maps to {"votes": ["0"]}
+                game_ids_map = {}
+                for gid in game_ids:
+                    game_ids_map[gid] = {
+                        "votes": [0]  # or ["0"] if you want string numbers
+                    }
+                
+                session_id = str(uuid.uuid4())
+                # Prepare the item for DynamoDB
+                item = {
+                    "sessionId": session_id,
+                    "gameIds": game_ids_map,
+                    "userIds": user_ids
+                }
+
+                # Put the item into the sessions table
+                sessions_table.put_item(Item=item)
+
+                body = {
+                    "message": f"Session {session_id} created successfully.",
+                    "session": item
+                }
+                statusCode = 200
+            except Exception as e:
+                print(f"Error creating session: {e}")
+                statusCode = 500
+                body = f"Error: Failed to create session. {str(e)}"
 
 
     except KeyError as e:
