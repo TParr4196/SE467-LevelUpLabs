@@ -19,6 +19,9 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     width: '100%',
   },
+  bottomButtonContainer: {
+    marginBottom: 16,
+  },
 });
 
 export default function GuildsFriendsScreen() {
@@ -148,27 +151,7 @@ export default function GuildsFriendsScreen() {
       />
 
       {/* Buttons Above Navbar */}
-      <View style={[styles.buttonRow, styles.bottomButtonContainer]}>
-        {isGuildsView ? (
-          <>
-            <View style={styles.buttonWrapper}>
-              <Button title="Create Guild" onPress={() => setCreateGuildVisible(true)} color="#0a7ea4" />
-            </View>
-            <View style={styles.buttonWrapper}>
-              <Button title="Leave Guild" onPress={() => setRemoveModalVisible(true)} color="#0a7ea4" />
-            </View>
-          </>
-        ) : (
-          <>
-            <View style={styles.buttonWrapper}>
-              <Button title="Add Friend" onPress={() => setAddFriendVisible(true)} color="#0a7ea4" />
-            </View>
-            <View style={styles.buttonWrapper}>
-              <Button title="Remove Friend" onPress={() => setRemoveModalVisible(true)} color="#0a7ea4" />
-            </View>
-          </>
-        )}
-      </View>
+     
 
       {/* Create Guild Modal */}
       <Modal
