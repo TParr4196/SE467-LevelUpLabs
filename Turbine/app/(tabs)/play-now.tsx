@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  StyleSheet,
   Animated,
   Modal,
 } from 'react-native';
@@ -15,6 +14,9 @@ import { useAppData } from '@/app/context/AppDataContext';
 import { styles } from '@/app/styles/homeScreenStyles';
 import { Friend } from '@/types/friend';
 import { friendStyles } from '../styles/playNowStyles';
+import { Game } from '@/types/game';
+import { getGames, getUsers } from '@/utils/api';
+import { User } from '@/types/user';
 
 const { width } = Dimensions.get('window');
 
@@ -22,16 +24,65 @@ export default function ChooseGameScreen() {
   const { params } = useRoute<any>();
   const initialSelectedFriends = params?.selectedFriends || [];
   const { games, friends: allFriends } = useAppData();
+  const [ combinedGames, setCombinedGames] = useState<Game[]>([]);
 
   const [selectedFriends, setSelectedFriends] = useState(initialSelectedFriends);
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [gameId: string]: boolean }>({});
   const [modalVisible, setModalVisible] = useState(false);
 
+  useEffect(()=>{
+    setCombinedGames(games);
+  },[])
+
+  useEffect(()=>{
+    const userIds=selectedFriends.map((friend: Friend) => friend.userId);
+    console.log(userIds)
+    setGameData(userIds)
+  },[selectedFriends])
+
+  async function setGameData(userIds: string[]) {
+  if (userIds.length === 0) return;
+  try {
+    // Fetch user data
+    const users = await getUsers(userIds);
+
+    // Collect unique game IDs owned by these users
+
+    const combinedGameIds: string[] = (users as User[])
+      .map((user: User) => user.gamesOwned)
+      .reduce((sharedGames: string[], userGames: string[]) => 
+        sharedGames.filter((id: string) => userGames.includes(id))
+      );
+
+
+    // Fetch full game data for these IDs
+    const allGames = await getGames(combinedGameIds);
+
+    // Map to the expected Game shape (may be unnecessary if getGames already returns full Game objects)
+    const allGameObjects: Game[] = allGames.map((game: Game) => ({
+      gameId: game.gameId,
+      name: game.name,
+      imageUrl: game.imageUrl,
+      rating: game.rating,
+      recommendedPlayers: game.recommendedPlayers,
+      averagePlaytime: game.averagePlaytime,
+      genres: game.genres,
+    }));
+
+    // Update state
+    setCombinedGames(allGameObjects);
+    console.log(allGameObjects);
+  } catch (error) {
+    console.error('Error fetching game data:', error);
+  }
+}
+
+
   // Animated value for horizontal slide
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const currentGame = games[currentGameIndex];
+  const currentGame = combinedGames[currentGameIndex];
 
   const toggleFriend = (friendId: string) => {
     setSelectedFriends((prev: Friend[]) => {
@@ -63,7 +114,7 @@ export default function ChooseGameScreen() {
       slideAnim.setValue(0);
 
       // Move to next game or finish
-      if (currentGameIndex < games.length - 1) {
+      if (currentGameIndex < combinedGames.length - 1) {
         setCurrentGameIndex(currentGameIndex + 1);
       } else {
         alert('All games answered!');
@@ -86,19 +137,6 @@ export default function ChooseGameScreen() {
     );
   };
 
-  if (!currentGame) {
-    return (
-      <View
-        style={[
-          styles.container,
-          { backgroundColor: '#111', justifyContent: 'center', alignItems: 'center' },
-        ]}
-      >
-        <Text style={{ color: 'white', fontSize: 20 }}>No games available</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: '#111', padding: 20, flex: 1 }]}>
       <Text style={[styles.title, { color: 'white', marginBottom: 10 }]}>Choose Friends and Game</Text>
@@ -119,12 +157,12 @@ export default function ChooseGameScreen() {
         }}
       >
         <Image
-          source={{ uri: currentGame.imageUrl }}
+          source={{ uri: currentGame?.imageUrl }}
           style={{ width: 300, height: 300, marginBottom: 20 }}
           resizeMode="contain"
         />
         <Text style={{ color: 'white', fontSize: 28, fontWeight: 'bold', textAlign: 'center' }}>
-          {currentGame.name}
+          {currentGame?.name}
         </Text>
         <Text style={{ color: 'gray', marginVertical: 10, textAlign: 'center' }}>
           Playing with:{' '}

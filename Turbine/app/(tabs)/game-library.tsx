@@ -28,7 +28,6 @@ export default function GameLibraryScreen() {
     const getAllDefaultGames = async () => {
         try {
             const allGames = await getGames();
-            console.log('all games from Search', allGames)
             // Map the fetched games to the Game type
             const allGameObjects: Game[] = allGames.map((game: Game) => ({
                 gameId: game.gameId,
@@ -39,9 +38,6 @@ export default function GameLibraryScreen() {
                 averagePlaytime: game.averagePlaytime,
                 genres: game.genres,
             }));
-
-            console.log('Games in library:', games);
-            console.log('All default games:', allGameObjects);
 
             // Filter out games that are already in the user's library
             const filteredGames = allGameObjects.filter(
