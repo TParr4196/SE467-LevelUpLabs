@@ -62,12 +62,19 @@ def lambda_handler(event, context):
                     )
                     games_owned = [game['relatedId'] for game in games_response.get('Items', [])]
 
+                    # Get guilds for this user from guild_members_map_table (by relatedId)
+                    guilds_response = guild_members_map_table.scan(
+                        FilterExpression=boto3.dynamodb.conditions.Attr('relatedId').eq(user_id)
+                    )
+                    guild_ids = [item['entityId'] for item in guilds_response.get('Items', [])]
+                    
                     # Append user details with gamesOwned
                     users.append({
                         'userId': user_item.get('userId', ''),
                         'name': user_item.get('name', ''),
                         'imageUrl': user_item.get('imageUrl', ''),
                         'gamesOwned': games_owned,  # List of game IDs owned by the user
+                        'guildIds': guild_ids,      # List of guild IDs the user is a member of
                         'description': user_item.get('description','')
                     })
             body = users
