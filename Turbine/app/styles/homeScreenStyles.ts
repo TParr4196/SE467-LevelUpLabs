@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { Dimensions } from 'react-native';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height:screenHeight} = Dimensions.get('window');
+
 
 export const styles = StyleSheet.create({
   center: {
@@ -28,7 +29,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -65,12 +66,12 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  
   mainContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
     marginTop: 20,
+    height: screenHeight / 3, // Each section row is 1/3 of the screen height
   },
   bannerImage: {
     width: '100%',
@@ -103,7 +104,9 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
+    width: screenWidth / 3, // Limit width to 1/3 of the screen
+    height: '100%',          // Make the games box shorter vertically (was '30%' or '100%')
+},
   friendsContainer: {
     flex: 1,
     backgroundColor: '#ffffff',
@@ -115,6 +118,8 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    width: screenWidth / 3, // Limit width to 1/3 of the screen
+    height: '100%',
   },
   profileContainer: {
     flex: 1,
@@ -127,6 +132,8 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    width: screenWidth / 3, // Limit width to 1/3 of the screen
+    height: '100%',
   },
   profileContent: {
     flex: 1,
@@ -173,11 +180,11 @@ export const styles = StyleSheet.create({
     elevation: 3,
   },
   continueButton: {
-  marginTop: 10,
-  backgroundColor: 'green',
-  padding: 12,
-  borderRadius: 10,
-  alignItems: 'center',
+    marginTop: 10,
+    backgroundColor: 'green',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
   },
   continueButtonText: {
     color: 'white',
@@ -185,7 +192,7 @@ export const styles = StyleSheet.create({
     fontSize: 16,
   },
   scrollContainer: {
-  paddingBottom: 40,
-  paddingHorizontal: 10,
+    paddingBottom: 40,
+    paddingHorizontal: 10,
   },
 });

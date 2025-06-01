@@ -60,37 +60,38 @@ export default function HomeScreen() {
   }
 
   return (
-  <View style={[styles.container, { backgroundColor: 'darkgreen' }]}>
-    <View style={styles.contentWrapper}>
-      <Banner bounceAnim={bounceAnim} />
+    <View style={[styles.container, { backgroundColor: 'darkgreen' }]}>
+      <View style={styles.contentWrapper}>
+        <Banner bounceAnim={bounceAnim} />
 
-      <View style={styles.mainContent}>
-        {/* Each container gets a fixed height and own scroll */}
-        
-        <View style={{ height: screenHeight * 0.65 }}>
-          <ScrollView>
-            <GameLibrary games={games} />
-          </ScrollView>
-        </View>
+        <View style={styles.mainContent}>
+          {/* Left: Game Library - make this half as tall as the others */}
+          <View style={{ height: screenHeight * 0.325 }}>
+            <ScrollView>
+              <GameLibrary games={games} />
+            </ScrollView>
+          </View>
 
-        <View style={{ height: screenHeight * 0.65 }}>
-          <ScrollView>
-            <FriendsContainer friends={friends} />
-          </ScrollView>
-        </View>
+          {/* Middle: Friends */}
+          <View style={{ height: screenHeight * 0.65 }}>
+            <ScrollView>
+              <FriendsContainer friends={friends} />
+            </ScrollView>
+          </View>
 
-        <View style={{ height: screenHeight * 0.65 }}>
-          <ScrollView>
-            <ProfileContainer
-              avatarUri={profile?.avatarUri || 'https://www.gravatar.com/avatar/?d=mp'}
-              description={profile?.description || ''}
-            />
-          </ScrollView>
+          {/* Right: Profile */}
+          <View style={{ height: screenHeight * 0.65 }}>
+            <ScrollView>
+              <ProfileContainer
+                avatarUri={profile?.avatarUri || 'https://www.gravatar.com/avatar/?d=mp'}
+                description={profile?.description || ''}
+              />
+            </ScrollView>
+          </View>
         </View>
       </View>
     </View>
-  </View>
-);
+  );
 }
 
 type BannerProps = {
@@ -224,7 +225,6 @@ function FriendsContainer({ friends }: FriendsContainerProps) {
     </View>
   );
 }
-
 
 type ProfileContainerProps = {
   avatarUri: string;

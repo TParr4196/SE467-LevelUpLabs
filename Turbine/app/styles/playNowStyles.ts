@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 export const friendStyles = StyleSheet.create({
   selectFriendsButton: {
-    backgroundColor: '#2980b9',
+    backgroundColor:'#0a7e3a',
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',

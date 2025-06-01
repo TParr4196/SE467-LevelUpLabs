@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, Modal, ScrollView, TextInput, Button } from 'react-native';
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  TextInput,
+} from "react-native";
 
-import { getGuildDetails, getUsers } from '@/utils/api';
-import { useAppData } from '../context/AppDataContext';
-import { styles as importedStyles } from '@/app/styles/friendsStyle';
+import { getGuildDetails, getUsers } from "@/utils/api";
+import { useAppData } from "../context/AppDataContext";
+import { styles as importedStyles } from "@/app/styles/friendsStyle";
 
 const styles = StyleSheet.create({
   ...importedStyles,
@@ -13,14 +23,17 @@ const styles = StyleSheet.create({
     minWidth: 140,
   },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     marginVertical: 8,
-    width: '100%',
+    width: "100%",
   },
   bottomButtonContainer: {
     marginBottom: 16,
+  },
+  spacedButton: {
+    marginHorizontal: 24, // More spacing between buttons
   },
 });
 
@@ -31,31 +44,32 @@ export default function GuildsFriendsScreen() {
   const [invitesVisible, setInvitesVisible] = useState(false);
   const [createGuildVisible, setCreateGuildVisible] = useState(false);
 
-  const [guildName, setGuildName] = useState('');
-  const [guildDescription, setGuildDescription] = useState('');
-  const [gameTagInput, setGameTagInput] = useState('');
+  const [guildName, setGuildName] = useState("");
+  const [guildDescription, setGuildDescription] = useState("");
+  const [gameTagInput, setGameTagInput] = useState("");
   const [gameTags, setGameTags] = useState<string[]>([]);
 
   const [guildInvites] = useState([
-    { id: 1, name: 'Guild Alpha', from: 'User123' },
-    { id: 2, name: 'Guild Beta', from: 'User456' },
-    { id: 3, name: 'Guild Gamma', from: 'User789' },
+    { id: 1, name: "Guild Alpha", from: "User123" },
+    { id: 2, name: "Guild Beta", from: "User456" },
+    { id: 3, name: "Guild Gamma", from: "User789" },
   ]);
 
   const [addFriendVisible, setAddFriendVisible] = useState(false);
-  const [friendUsername, setFriendUsername] = useState('');
-  const [friendPhone, setFriendPhone] = useState('');
+  const [friendUsername, setFriendUsername] = useState("");
+  const [friendPhone, setFriendPhone] = useState("");
 
   const [removeModalVisible, setRemoveModalVisible] = useState(false);
   const [selectedToRemove, setSelectedToRemove] = useState<any>(null);
 
   const [selectedGuild, setSelectedGuild] = useState<any>(null);
-  const [guildDetailsModalVisible, setGuildDetailsModalVisible] = useState(false);
+  const [guildDetailsModalVisible, setGuildDetailsModalVisible] =
+    useState(false);
 
   const [guildMemberDetails, setGuildMemberDetails] = useState<any[]>([]);
 
   const handleCardPress = (item: any) => {
-    console.log('Card pressed:', item);
+    console.log("Card pressed:", item);
   };
 
   const handleGuildCardPress = async (guild: any) => {
@@ -73,22 +87,31 @@ export default function GuildsFriendsScreen() {
 
       setGuildDetailsModalVisible(true);
     } catch (err) {
-      setError('Failed to load guild details.');
+      setError("Failed to load guild details.");
     }
   };
 
   const renderCard = ({ item }: { item: any }) => {
     if (isGuildsView) {
       return (
-        <TouchableOpacity onPress={() => handleGuildCardPress(item)} style={styles.guildCardContainer}>
-          <Image source={{ uri: item.imageUrl }} style={styles.guildProfileImage} />
+        <TouchableOpacity
+          onPress={() => handleGuildCardPress(item)}
+          style={styles.guildCardContainer}
+        >
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.guildProfileImage}
+          />
           <Text style={styles.guildName}>{item.name}</Text>
         </TouchableOpacity>
       );
     }
     // Friends view
     return (
-      <TouchableOpacity onPress={() => handleCardPress(item)} style={styles.cardContainer}>
+      <TouchableOpacity
+        onPress={() => handleCardPress(item)}
+        style={styles.cardContainer}
+      >
         <Image source={{ uri: item.imageUrl }} style={styles.profileImage} />
         <Text style={styles.name}>{item.name}</Text>
       </TouchableOpacity>
@@ -98,12 +121,12 @@ export default function GuildsFriendsScreen() {
   const handleAddTag = () => {
     if (gameTagInput.trim() && !gameTags.includes(gameTagInput.trim())) {
       setGameTags([...gameTags, gameTagInput.trim()]);
-      setGameTagInput('');
+      setGameTagInput("");
     }
   };
 
   const handleRemoveTag = (tag: string) => {
-    setGameTags(gameTags.filter(t => t !== tag));
+    setGameTags(gameTags.filter((t) => t !== tag));
   };
 
   if (loading) {
@@ -117,7 +140,7 @@ export default function GuildsFriendsScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: 'red' }}>{error}</Text>
+        <Text style={{ color: "red" }}>{error}</Text>
       </View>
     );
   }
@@ -130,28 +153,29 @@ export default function GuildsFriendsScreen() {
           style={[styles.toggleBox, isGuildsView && styles.activeBox]}
           onPress={() => setIsGuildsView(true)}
         >
-          <Text style={[styles.toggleText, isGuildsView && styles.activeText]}>Guilds</Text>
+          <Text style={[styles.toggleText, isGuildsView && styles.activeText]}>
+            Guilds
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.toggleBox, !isGuildsView && styles.activeBox]}
           onPress={() => setIsGuildsView(false)}
         >
-          <Text style={[styles.toggleText, !isGuildsView && styles.activeText]}>Friends</Text>
+          <Text style={[styles.toggleText, !isGuildsView && styles.activeText]}>
+            Friends
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* List of Guilds or Friends */}
       <FlatList
         data={isGuildsView ? guilds : friends}
-        key={isGuildsView ? 'guilds' : 'friends'}
+        key={isGuildsView ? "guilds" : "friends"}
         keyExtractor={(item) => item.guildId || item.id || item.userId}
         renderItem={renderCard}
         contentContainerStyle={styles.grid}
         numColumns={isGuildsView ? 4 : 3}
       />
-
-      {/* Buttons Above Navbar */}
-     
 
       {/* Create Guild Modal */}
       <Modal
@@ -160,10 +184,10 @@ export default function GuildsFriendsScreen() {
         animationType="fade"
         onRequestClose={() => {
           setCreateGuildVisible(false);
-          setGuildName('');
-          setGuildDescription('');
+          setGuildName("");
+          setGuildDescription("");
           setGameTags([]);
-          setGameTagInput('');
+          setGameTagInput("");
         }}
       >
         <View style={styles.modalOverlay}>
@@ -191,12 +215,15 @@ export default function GuildsFriendsScreen() {
                 onSubmitEditing={handleAddTag}
                 blurOnSubmit={false}
               />
-              <TouchableOpacity style={styles.addTagButton} onPress={handleAddTag}>
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Add</Text>
+              <TouchableOpacity
+                style={styles.addTagButton}
+                onPress={handleAddTag}
+              >
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Add</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.tagsContainer}>
-              {gameTags.map(tag => (
+              {gameTags.map((tag) => (
                 <View key={tag} style={styles.tag}>
                   <Text style={styles.tagText}>{tag}</Text>
                   <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
@@ -206,24 +233,30 @@ export default function GuildsFriendsScreen() {
               ))}
             </View>
             <View style={styles.buttonRow}>
-              <View style={styles.buttonWrapper}>
-                <Button title="Create" onPress={() => {
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => {
                   setCreateGuildVisible(false);
-                  setGuildName('');
-                  setGuildDescription('');
+                  setGuildName("");
+                  setGuildDescription("");
                   setGameTags([]);
-                  setGameTagInput('');
-                }} color="#0a7ea4" />
-              </View>
-              <View style={styles.buttonWrapper}>
-                <Button title="Cancel" onPress={() => {
+                  setGameTagInput("");
+                }}
+              >
+                <Text style={styles.bottomButtonText}>Create</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => {
                   setCreateGuildVisible(false);
-                  setGuildName('');
-                  setGuildDescription('');
+                  setGuildName("");
+                  setGuildDescription("");
                   setGameTags([]);
-                  setGameTagInput('');
-                }} color="#0a7ea4" />
-              </View>
+                  setGameTagInput("");
+                }}
+              >
+                <Text style={styles.bottomButtonText}>Cancel</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -236,8 +269,8 @@ export default function GuildsFriendsScreen() {
         animationType="fade"
         onRequestClose={() => {
           setAddFriendVisible(false);
-          setFriendUsername('');
-          setFriendPhone('');
+          setFriendUsername("");
+          setFriendPhone("");
         }}
       >
         <View style={styles.modalOverlay}>
@@ -257,28 +290,26 @@ export default function GuildsFriendsScreen() {
               keyboardType="phone-pad"
             />
             <View style={styles.buttonRow}>
-              <View style={styles.buttonWrapper}>
-                <Button
-                  title="Confirm"
-                  onPress={() => {
-                    setAddFriendVisible(false);
-                    setFriendUsername('');
-                    setFriendPhone('');
-                  }}
-                  color="#0a7ea4"
-                />
-              </View>
-              <View style={styles.buttonWrapper}>
-                <Button
-                  title="Cancel"
-                  onPress={() => {
-                    setAddFriendVisible(false);
-                    setFriendUsername('');
-                    setFriendPhone('');
-                  }}
-                  color="#0a7ea4"
-                />
-              </View>
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => {
+                  setAddFriendVisible(false);
+                  setFriendUsername("");
+                  setFriendPhone("");
+                }}
+              >
+                <Text style={styles.bottomButtonText}>Confirm</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => {
+                  setAddFriendVisible(false);
+                  setFriendUsername("");
+                  setFriendPhone("");
+                }}
+              >
+                <Text style={styles.bottomButtonText}>Cancel</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -297,13 +328,14 @@ export default function GuildsFriendsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {isGuildsView ? 'Remove a Guild' : 'Remove a Friend'}
+              {isGuildsView ? "Remove a Guild" : "Remove a Friend"}
             </Text>
-            <ScrollView style={{ maxHeight: 300, width: '100%' }}>
-              {(isGuildsView ? guilds : friends).map(item => {
+            <ScrollView style={{ maxHeight: 300, width: "100%" }}>
+              {(isGuildsView ? guilds : friends).map((item) => {
                 const isSelected =
                   (selectedToRemove?.id && selectedToRemove.id === item.id) ||
-                  (selectedToRemove?.userId && selectedToRemove.userId === item.userId);
+                  (selectedToRemove?.userId &&
+                    selectedToRemove.userId === item.userId);
                 return (
                   <TouchableOpacity
                     key={item.id || item.userId}
@@ -313,33 +345,38 @@ export default function GuildsFriendsScreen() {
                     ]}
                     onPress={() => setSelectedToRemove(item)}
                   >
-                    <Image source={{ uri: item.imageUrl }} style={styles.profileImage} />
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={styles.profileImage}
+                    />
                     <Text style={styles.name}>{item.name}</Text>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
             <View style={styles.buttonRow}>
-              <View style={styles.buttonWrapper}>
-                <Button
-                  title="Confirm Remove"
-                  onPress={() => {
-                    // Disabled for demo: do nothing
-                  }}
-                  color="#0a7ea4"
-                  disabled={!selectedToRemove}
-                />
-              </View>
-              <View style={styles.buttonWrapper}>
-                <Button
-                  title="Cancel"
-                  onPress={() => {
-                    setRemoveModalVisible(false);
-                    setSelectedToRemove(null);
-                  }}
-                  color="#0a7ea4"
-                />
-              </View>
+              <TouchableOpacity
+                style={[
+                  styles.bottomButton,
+                  styles.spacedButton,
+                  !selectedToRemove && { opacity: 0.5 },
+                ]}
+                onPress={() => {
+                  // Disabled for demo: do nothing
+                }}
+                disabled={!selectedToRemove}
+              >
+                <Text style={styles.bottomButtonText}>Confirm </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => {
+                  setRemoveModalVisible(false);
+                  setSelectedToRemove(null);
+                }}
+              >
+                <Text style={styles.bottomButtonText}>Cancel</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -355,11 +392,11 @@ export default function GuildsFriendsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Guild Invites</Text>
-            <ScrollView style={{ maxHeight: 300, width: '100%' }}>
+            <ScrollView style={{ maxHeight: 300, width: "100%" }}>
               {guildInvites.length === 0 ? (
                 <Text>No invites.</Text>
               ) : (
-                guildInvites.map(invite => (
+                guildInvites.map((invite) => (
                   <View key={invite.id} style={styles.inviteItem}>
                     <Text style={styles.inviteText}>
                       {invite.name} (from {invite.from})
@@ -369,9 +406,12 @@ export default function GuildsFriendsScreen() {
               )}
             </ScrollView>
             <View style={styles.buttonRow}>
-              <View style={styles.buttonWrapper}>
-                <Button title="Close" onPress={() => setInvitesVisible(false)} color="#0a7ea4" />
-              </View>
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => setInvitesVisible(false)}
+              >
+                <Text style={styles.bottomButtonText}>Close</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -389,9 +429,14 @@ export default function GuildsFriendsScreen() {
             {selectedGuild && (
               <>
                 <Text style={styles.modalTitle}>{selectedGuild.name}</Text>
-                <Text style={styles.modalDescription}>{selectedGuild.description}</Text>
+                <Text style={styles.modalDescription}>
+                  {selectedGuild.description}
+                </Text>
                 {selectedGuild.imageUrl && (
-                  <Image source={{ uri: selectedGuild.imageUrl }} style={styles.guildProfileImage} />
+                  <Image
+                    source={{ uri: selectedGuild.imageUrl }}
+                    style={styles.guildProfileImage}
+                  />
                 )}
                 <Text style={styles.modalLabel}>Members:</Text>
                 <FlatList
@@ -399,7 +444,10 @@ export default function GuildsFriendsScreen() {
                   keyExtractor={(member) => member.userId}
                   renderItem={({ item }) => (
                     <View style={styles.memberItem}>
-                      <Image source={{ uri: item.imageUrl }} style={styles.memberImage} />
+                      <Image
+                        source={{ uri: item.imageUrl }}
+                        style={styles.memberImage}
+                      />
                       <Text style={styles.memberName}>{item.name}</Text>
                     </View>
                   )}
@@ -408,13 +456,12 @@ export default function GuildsFriendsScreen() {
               </>
             )}
             <View style={styles.buttonRow}>
-              <View style={styles.buttonWrapper}>
-                <Button
-                  title="Close"
-                  onPress={() => setGuildDetailsModalVisible(false)}
-                  color="#0a7ea4"
-                />
-              </View>
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => setGuildDetailsModalVisible(false)}
+              >
+                <Text style={styles.bottomButtonText}>Close</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -424,27 +471,47 @@ export default function GuildsFriendsScreen() {
         <View style={styles.buttonGroup}>
           {isGuildsView ? (
             <>
-              <Button title="Create Guild" onPress={() => setCreateGuildVisible(true)} color="#0a7ea4" />
-              <Button title="Leave Guild" onPress={() => setRemoveModalVisible(true)} color="#0a7ea4" />
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => setCreateGuildVisible(true)}
+              >
+                <Text style={styles.bottomButtonText}>Create Guild</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => setRemoveModalVisible(true)}
+              >
+                <Text style={styles.bottomButtonText}>Leave Guild</Text>
+              </TouchableOpacity>
             </>
           ) : (
             <>
-              <Button title="Add Friend" onPress={() => setAddFriendVisible(true)} color="#0a7ea4" />
-              <Button title="Remove Friend" onPress={() => setRemoveModalVisible(true)} color="#0a7ea4" />
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => setAddFriendVisible(true)}
+              >
+                <Text style={styles.bottomButtonText}>Add Friend</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.spacedButton]}
+                onPress={() => setRemoveModalVisible(true)}
+              >
+                <Text style={styles.bottomButtonText}>Remove Friend</Text>
+              </TouchableOpacity>
             </>
           )}
         </View>
         {isGuildsView && (
           <View style={styles.guildInvitesButtonBar}>
-            <Button
-              title="View Guild Invites"
+            <TouchableOpacity
+              style={styles.bottomButton}
               onPress={() => setInvitesVisible(true)}
-              color="#0a7ea4"
-            />
+            >
+              <Text style={styles.bottomButtonText}>View Guild Invites</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
     </View>
   );
 }
-

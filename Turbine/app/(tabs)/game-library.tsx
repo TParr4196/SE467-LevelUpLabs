@@ -1,35 +1,29 @@
-import { View, FlatList, Dimensions, ActivityIndicator, Text, Button, StyleSheet, Modal, TextInput, TouchableOpacity } from 'react-native';
+import { View, FlatList, Dimensions, ActivityIndicator, Text, StyleSheet, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/GameCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
-import { deleteFromCollection, getGames, getUsers, postToCollection } from '@/utils/api'; // Add your POST API function here
+import { deleteFromCollection, getGames, getUsers, postToCollection } from '@/utils/api';
 import { DEFAULT_USER_ID } from '@/utils/constants';
 import { Game } from '@/types/game';
-import { useAppData } from '@/app/context/AppDataContext'; // Import the context
+import { useAppData } from '@/app/context/AppDataContext';
 import { styles } from '@/app/styles/gameLibraryStyles';
 
 export default function GameLibraryScreen() {
     const screenWidth = Dimensions.get('window').width;
-    const numColumns = Math.floor(screenWidth / 190); // Can keep as 180 but it cuts off a game.
+    const numColumns = Math.floor(screenWidth / 190);
 
-    // Properly type the state variables
-    const { games, setGames, error, loading } = useAppData(); // Use context to get and set games
-    const [allFilteredGames, setAllFilteredGames] = useState<Game[]>([]); // Source of truth for filtered games
-
+    const { games, setGames, error, loading } = useAppData();
+    const [allFilteredGames, setAllFilteredGames] = useState<Game[]>([]);
     const [addModalVisible, setAddModalVisible] = useState(false);
     const [selectedGameToAdd, setSelectedGameToAdd] = useState<Game | null>(null);
-
     const [removeModalVisible, setRemoveModalVisible] = useState(false);
     const [selectedGameToRemove, setSelectedGameToRemove] = useState<Game | null>(null);
-
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<Game[]>([]);
 
     const getAllDefaultGames = async () => {
         try {
             const allGames = await getGames();
-            console.log('all games from Search', allGames)
-            // Map the fetched games to the Game type
             const allGameObjects: Game[] = allGames.map((game: Game) => ({
                 gameId: game.gameId,
                 imageUrl: game.imageUrl,
@@ -39,17 +33,11 @@ export default function GameLibraryScreen() {
                 averagePlaytime: game.averagePlaytime,
                 genres: game.genres,
             }));
-
-            console.log('Games in library:', games);
-            console.log('All default games:', allGameObjects);
-
-            // Filter out games that are already in the user's library
             const filteredGames = allGameObjects.filter(
                 (game) => !games.some((g) => g.gameId === game.gameId)
             );
-
-            setAllFilteredGames(filteredGames); // Save the full filtered list
-            setSearchResults(filteredGames); // Update the search results with the filtered list
+            setAllFilteredGames(filteredGames);
+            setSearchResults(filteredGames);
         } catch (err) {
             console.error('Error fetching default games:', err);
         }
@@ -58,19 +46,15 @@ export default function GameLibraryScreen() {
     const handleAddGame = () => {
         setSearchQuery('');
         setSelectedGameToAdd(null);
-        getAllDefaultGames(); // Fetch and filter the default games
+        getAllDefaultGames();
         setAddModalVisible(true);
-
     };
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
-
-        // Dynamically filter the searchResults based on the query
         const filteredResults = allFilteredGames.filter((game) =>
             game.name.toLowerCase().includes(query.toLowerCase())
         );
-
         setSearchResults(filteredResults);
     };
 
@@ -80,15 +64,9 @@ export default function GameLibraryScreen() {
 
     const handleConfirmAddGame = async () => {
         if (!selectedGameToAdd) return;
-
         try {
-            // Send POST request to add the game to the backend
             await postToCollection(DEFAULT_USER_ID, { uuid: selectedGameToAdd.gameId });
-            console.log(`Game added: ${selectedGameToAdd.name}`);
-
-            // Update the local library
             setGames((prevGames) => [...prevGames, selectedGameToAdd]);
-
             setAddModalVisible(false);
             setSelectedGameToAdd(null);
         } catch (err) {
@@ -103,14 +81,11 @@ export default function GameLibraryScreen() {
 
     const handleRemoveGame = async () => {
         if (!selectedGameToRemove) return;
-
         try {
-            const response = await deleteFromCollection(DEFAULT_USER_ID, selectedGameToRemove.gameId);
-
+            await deleteFromCollection(DEFAULT_USER_ID, selectedGameToRemove.gameId);
             setGames((prevGames) => prevGames.filter((game) => game.gameId !== selectedGameToRemove.gameId));
             setRemoveModalVisible(false);
             setSelectedGameToRemove(null);
-
         } catch (err) {
             console.error('Error removing game from library:', err);
             alert('An error occurred while removing the game. Please try again.');
@@ -142,12 +117,16 @@ export default function GameLibraryScreen() {
                 keyExtractor={(item) => item.gameId}
                 renderItem={({ item }) => <Card id={item.gameId} title={item.name} cover={item.imageUrl} />}
                 columnWrapperStyle={{ gap: 12 }}
-                contentContainerStyle={{ gap: 12, paddingBottom: 100 }} // Add padding to avoid overlapping with buttons
+                contentContainerStyle={{ gap: 12, paddingBottom: 100 }}
             />
             <View style={styles.bottomBar}>
                 <View style={styles.buttonGroup}>
-                    <Button title="Add Game" onPress={handleAddGame} />
-                    <Button title="Remove Game" onPress={handleOpenRemoveModal} />
+                    <TouchableOpacity style={styles.bottomButton} onPress={handleAddGame}>
+                        <Text style={styles.bottomButtonText}>Add Game</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.bottomButton} onPress={handleOpenRemoveModal}>
+                        <Text style={styles.bottomButtonText}>Remove Game</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -164,11 +143,12 @@ export default function GameLibraryScreen() {
                         <TextInput
                             style={styles.searchBox}
                             placeholder="Search for a game..."
+                            placeholderTextColor="#ccc"
                             value={searchQuery}
-                            onChangeText={handleSearch} // Dynamically filter searchResults as the user types
+                            onChangeText={handleSearch}
                         />
                         <FlatList
-                            data={searchResults} // Display dynamically filtered results
+                            data={searchResults}
                             keyExtractor={(item) => item.gameId}
                             renderItem={({ item }) => (
                                 <TouchableOpacity
@@ -183,12 +163,22 @@ export default function GameLibraryScreen() {
                             )}
                             style={{ maxHeight: 350 }}
                         />
-                        <Button
-                            title="Add Selected Game"
+                        <TouchableOpacity
+                            style={[
+                                styles.bottomButton,
+                                !selectedGameToAdd && { opacity: 0.5 }
+                            ]}
                             onPress={handleConfirmAddGame}
-                            disabled={!selectedGameToAdd} // Disable button if no game is selected
-                        />
-                        <Button title="Close" onPress={() => setAddModalVisible(false)} />
+                            disabled={!selectedGameToAdd}
+                        >
+                            <Text style={styles.bottomButtonText}>Add Selected Game</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.bottomButton}
+                            onPress={() => setAddModalVisible(false)}
+                        >
+                            <Text style={styles.bottomButtonText}>Close</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
@@ -218,12 +208,22 @@ export default function GameLibraryScreen() {
                                 </TouchableOpacity>
                             )}
                         />
-                        <Button
-                            title="Delete Selected Game"
+                        <TouchableOpacity
+                            style={[
+                                styles.bottomButton,
+                                !selectedGameToRemove && { opacity: 0.5 }
+                            ]}
                             onPress={handleRemoveGame}
                             disabled={!selectedGameToRemove}
-                        />
-                        <Button title="Close" onPress={() => setRemoveModalVisible(false)} />
+                        >
+                            <Text style={styles.bottomButtonText}>Delete Selected Game</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.bottomButton}
+                            onPress={() => setRemoveModalVisible(false)}
+                        >
+                            <Text style={styles.bottomButtonText}>Close</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

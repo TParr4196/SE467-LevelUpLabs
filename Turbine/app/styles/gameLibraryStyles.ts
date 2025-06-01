@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
         left: 0,
         right: 0,
         height: 60,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#0a7e3a', // changed to green
         justifyContent: 'center',
         alignItems: 'center',
         borderTopWidth: 1,
@@ -20,6 +20,20 @@ export const styles = StyleSheet.create({
     buttonGroup: {
         flexDirection: 'row',
         gap: 20, // Space between the buttons
+    },
+    // Add a style for the buttons if not already present
+    bottomButton: {
+        backgroundColor: '#181818', // green
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+        marginHorizontal: 8,
+    },
+    bottomButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+        textAlign: 'center',
     },
     modalContainer: {
         flex: 1,
