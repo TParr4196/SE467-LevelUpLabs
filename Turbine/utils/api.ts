@@ -182,6 +182,20 @@ export const voteForGame = async (sessionId: string, gameId: string) => {
   }
 };
 
+// POST: /sessions/{sessionId}/members -> {userIds: [<>, <>]} -> 200
+export const addSessionMembers = async (sessionId: string, userIds: string[]) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/sessions/${sessionId}/members`,
+      { userIds }
+    );
+    return response.status; // Should return 200 if successful
+  } catch (error) {
+    console.error('Error adding session members:', error);
+    throw error;
+  }
+};
+
 
 
 // GET: /users/{userId}/profile -> {userId, username, avatarUrl, description, isPrivate, ...}
