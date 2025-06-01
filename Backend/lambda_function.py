@@ -554,6 +554,53 @@ def lambda_handler(event, context):
                 body = f"Error: Failed to vote for game. {str(e)}"
 
 
+        elif event['routeKey'] == "POST /sessions/{sessionId}/members":
+            try:
+                session_id = event['pathParameters'].get('sessionId')
+                if not session_id:
+                    raise KeyError("Missing 'sessionId' path parameter")
+
+                # Parse the request body for userIds
+                request_body = json.loads(event.get('body', '{}'))
+                new_user_ids = request_body.get('userIds', [])
+                if not isinstance(new_user_ids, list) or not new_user_ids:
+                    raise KeyError("Missing or invalid 'userIds' in request body")
+
+                # Fetch current userIds from the session
+                session_response = sessions_table.get_item(Key={'sessionId': session_id})
+                session_item = session_response.get("Item")
+                current_user_ids = set(session_item.get('userIds', [])) if session_item else set()
+
+                # Filter out userIds that are already present
+                filtered_user_ids = [uid for uid in new_user_ids if uid not in current_user_ids]
+                if not filtered_user_ids:
+                    body = {
+                        "message": "No new userIds to add.",
+                        "userIds": list(current_user_ids)
+                    }
+                    statusCode = 200
+                else:
+                    # Append only the new userIds
+                    response = sessions_table.update_item(
+                        Key={'sessionId': session_id},
+                        UpdateExpression="SET userIds = list_append(if_not_exists(userIds, :empty_list), :new_user_ids)",
+                        ExpressionAttributeValues={
+                            ":new_user_ids": filtered_user_ids,
+                            ":empty_list": []
+                        },
+                        ReturnValues="UPDATED_NEW"
+                    )
+                    body = {
+                        "message": f"Added users to session {session_id}.",
+                        "userIds": response["Attributes"]["userIds"]
+                    }
+                    statusCode = 200
+            except Exception as e:
+                print(f"Error adding session members: {e}")
+                statusCode = 500
+                body = f"Error: Failed to add session members. {str(e)}"
+
+
     except KeyError as e:
         print(f"KeyError: {e}")
         statusCode = 400
