@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  StyleSheet,
   Animated,
   Modal,
 } from 'react-native';
@@ -15,23 +14,96 @@ import { useAppData } from '@/app/context/AppDataContext';
 import { styles } from '@/app/styles/homeScreenStyles';
 import { Friend } from '@/types/friend';
 import { friendStyles } from '../styles/playNowStyles';
+import { Game } from '@/types/game';
+import { Guild } from '@/types/guild';
+import { getGames, getUsers } from '@/utils/api';
+import { User } from '@/types/user';
 
 const { width } = Dimensions.get('window');
 
 export default function ChooseGameScreen() {
   const { params } = useRoute<any>();
   const initialSelectedFriends = params?.selectedFriends || [];
-  const { games, friends: allFriends } = useAppData();
+  const initialSelectedGuilds = params?.selectedGuilds || [];
+  const { games, friends: allFriends, guilds: allGuilds } = useAppData();
+  const [ combinedGames, setCombinedGames] = useState<Game[]>([]);
 
+  const [selectedGuilds, setSelectedGuilds] = useState(initialSelectedGuilds);
   const [selectedFriends, setSelectedFriends] = useState(initialSelectedFriends);
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [gameId: string]: boolean }>({});
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisibleGuild, setModalVisibleGuild] = useState(false);
+
+
+  function getCombinedGames(){
+    const userIds = selectedFriends.map((friend: Friend) => friend.userId);
+
+    // Flatten guild members and get unique ones not already in userIds
+    const guildMemberIds: string[] = (selectedGuilds as Guild[])
+      .flatMap((guild: Guild) => guild.members)
+      .map((member: string) => member) // assuming members are User objects
+      .filter((id: string, index: number, self: string[]) => self.indexOf(id) === index) // remove duplicates within guilds
+      .filter((id: string) => !userIds.includes(id)); // exclude ones already in userIds
+
+    userIds.push(...guildMemberIds);
+
+    if(userIds.length > 0){
+      setGameData(userIds)
+    } else {
+      setCombinedGames(games)
+    }
+  }
+
+  useEffect(()=>{
+    getCombinedGames();
+  },[])
+
+  useEffect(()=>{
+    getCombinedGames()
+  },[selectedFriends, selectedGuilds])
+
+  async function setGameData(userIds: string[]) {
+  if (userIds.length === 0) return;
+  try {
+    // Fetch user data
+    const users = await getUsers(userIds);
+
+    // Collect unique game IDs owned by these users
+
+    const combinedGameIds: string[] = (users as User[])
+      .map((user: User) => user.gamesOwned)
+      .reduce((sharedGames: string[], userGames: string[]) => 
+        sharedGames.filter((id: string) => userGames.includes(id))
+      );
+
+
+    // Fetch full game data for these IDs
+    const allGames = await getGames(combinedGameIds);
+
+    // Map to the expected Game shape (may be unnecessary if getGames already returns full Game objects)
+    const allGameObjects: Game[] = allGames.map((game: Game) => ({
+      gameId: game.gameId,
+      name: game.name,
+      imageUrl: game.imageUrl,
+      rating: game.rating,
+      recommendedPlayers: game.recommendedPlayers,
+      averagePlaytime: game.averagePlaytime,
+      genres: game.genres,
+    }));
+
+    // Update state
+    setCombinedGames(allGameObjects);
+  } catch (error) {
+    console.error('Error fetching game data:', error);
+  }
+}
+
 
   // Animated value for horizontal slide
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const currentGame = games[currentGameIndex];
+  const currentGame = combinedGames[currentGameIndex];
 
   const toggleFriend = (friendId: string) => {
     setSelectedFriends((prev: Friend[]) => {
@@ -43,6 +115,18 @@ export default function ChooseGameScreen() {
       }
     });
   };
+
+  const toggleGuild = (guildId: string) => {
+  setSelectedGuilds((prev: Guild[]) => {
+    if (prev.find((g) => g.guildId === guildId)) {
+      return prev.filter((g) => g.guildId !== guildId);
+    } else {
+      const guildToAdd = allGuilds.find((g) => g.guildId === guildId);
+      return guildToAdd ? [...prev, guildToAdd] : prev;
+    }
+  });
+};
+
 
   const handleAnswer = (answer: boolean) => {
     if (!currentGame) return;
@@ -63,7 +147,7 @@ export default function ChooseGameScreen() {
       slideAnim.setValue(0);
 
       // Move to next game or finish
-      if (currentGameIndex < games.length - 1) {
+      if (currentGameIndex < combinedGames.length - 1) {
         setCurrentGameIndex(currentGameIndex + 1);
       } else {
         alert('All games answered!');
@@ -85,31 +169,32 @@ export default function ChooseGameScreen() {
       </TouchableOpacity>
     );
   };
-
-  if (!currentGame) {
+  const renderGuildItem = ({ item }: { item: Guild }) => {
+    const isSelected = selectedGuilds.some((g: Guild) => g.guildId === item.guildId);
     return (
-      <View
+      <TouchableOpacity
+        onPress={() => toggleGuild(item.guildId)}
         style={[
-          styles.container,
-          { backgroundColor: '#111', justifyContent: 'center', alignItems: 'center' },
+          friendStyles.friendItem,
+          { backgroundColor: isSelected ? '#3498db' : '#333' },
         ]}
       >
-        <Text style={{ color: 'white', fontSize: 20 }}>No games available</Text>
-      </View>
+        <Text style={{ color: isSelected ? 'white' : 'lightgray' }}>{item.name}</Text>
+      </TouchableOpacity>
     );
-  }
+  };
+
 
   return (
     <View style={[styles.container, { backgroundColor: '#111', padding: 20, flex: 1 }]}>
-      <Text style={[styles.title, { color: 'white', marginBottom: 10 }]}>Choose Friends and Game</Text>
-
-      {/* Button to open friend selection modal */}
-      <TouchableOpacity onPress={() => setModalVisible(true)} style={friendStyles.selectFriendsButton}>
+      {/* Top: Select Friends */}
+      <TouchableOpacity onPress={() => setModalVisible(true)} style={[friendStyles.selectFriendsButton, { marginBottom: 10 }]}>
         <Text style={{ color: 'white', fontSize: 16 }}>
           Select Friends ({selectedFriends.length})
         </Text>
       </TouchableOpacity>
 
+      {/* Middle: Animated Game View */}
       <Animated.View
         style={{
           flex: 1,
@@ -119,12 +204,12 @@ export default function ChooseGameScreen() {
         }}
       >
         <Image
-          source={{ uri: currentGame.imageUrl }}
+          source={{ uri: currentGame?.imageUrl }}
           style={{ width: 300, height: 300, marginBottom: 20 }}
           resizeMode="contain"
         />
         <Text style={{ color: 'white', fontSize: 28, fontWeight: 'bold', textAlign: 'center' }}>
-          {currentGame.name}
+          {currentGame?.name}
         </Text>
         <Text style={{ color: 'gray', marginVertical: 10, textAlign: 'center' }}>
           Playing with:{' '}
@@ -153,7 +238,14 @@ export default function ChooseGameScreen() {
         </View>
       </Animated.View>
 
-      {/* Modal for friend selection */}
+      {/* Bottom: Select Guilds */}
+      <TouchableOpacity onPress={() => setModalVisibleGuild(true)} style={[friendStyles.selectFriendsButton, { marginTop: 10 }]}>
+        <Text style={{ color: 'white', fontSize: 16 }}>
+          Select Guilds ({selectedGuilds.length})
+        </Text>
+      </TouchableOpacity>
+
+      {/* Friend Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={friendStyles.modalOverlay}>
           <View style={friendStyles.modalContent}>
@@ -165,6 +257,24 @@ export default function ChooseGameScreen() {
               contentContainerStyle={{ paddingBottom: 20 }}
             />
             <TouchableOpacity onPress={() => setModalVisible(false)} style={friendStyles.closeModalButton}>
+              <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Guild Modal */}
+      <Modal visible={modalVisibleGuild} animationType="slide" transparent={true}>
+        <View style={friendStyles.modalOverlay}>
+          <View style={friendStyles.modalContent}>
+            <Text style={[styles.title, { marginBottom: 10, color: 'white' }]}>Select Guilds</Text>
+            <FlatList
+              data={allGuilds}
+              keyExtractor={(item) => item.guildId}
+              renderItem={renderGuildItem}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            />
+            <TouchableOpacity onPress={() => setModalVisibleGuild(false)} style={friendStyles.closeModalButton}>
               <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
             </TouchableOpacity>
           </View>

@@ -338,8 +338,5 @@ export const styles = StyleSheet.create({
   membersList: {
     paddingVertical: 8,
   },
-
-
-
-
 });
+export default styles;
