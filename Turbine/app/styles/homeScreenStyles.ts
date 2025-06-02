@@ -189,3 +189,5 @@ export const styles = StyleSheet.create({
   paddingHorizontal: 10,
   },
 });
+
+export default styles;

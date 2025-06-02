@@ -39,3 +39,5 @@ export const friendStyles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+export default friendStyles;

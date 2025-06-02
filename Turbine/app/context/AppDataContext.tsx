@@ -6,8 +6,7 @@ import { DEFAULT_USER_ID } from '@/utils/constants';
 import { Game } from '@/types/game';
 import { Friend } from '@/types/friend';
 import { Profile } from '@/types/profile';
-import { getUsers } from '@/utils/api';
-import { getAllGuilds } from '@/utils/api'; // Adjust import based on your project structure
+import { getUsers, getGuildDetails } from '@/utils/api';
 const defaultAvatar = "https://www.gravatar.com/avatar/?d=mp"; // Default avatar URL
 
 type AppDataContextType = {
@@ -51,15 +50,19 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const loadAllData = async () => {
       try {
-        const [fetchedGames, fetchedFriends, fetchedGuilds] = await Promise.all([
+        const [fetchedUser, fetchedGames, fetchedFriends] = await Promise.all([
+          getUsers([userId]),
           fetchUserGames(userId),
           getUserFriends(userId),
-          getAllGuilds(),
         ]);
+
+        const fetchedGuilds = await Promise.all(
+          fetchedUser[0].guildIds.map((guildId: string) => getGuildDetails(guildId))
+        );
+        setGuilds(fetchedGuilds);
 
         setGames(fetchedGames);
         setFriends(fetchedFriends);
-        setGuilds(fetchedGuilds);
       } catch (err) {
         console.error('Error loading games or friends:', err);
         setError('Failed to load data. Please try again later.');
@@ -72,7 +75,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const response = await getUsers([userId]);
         // The backend returns an array of users
         const data = Array.isArray(response) ? response[0] : response;
-
+        console.log(response, data)
         const newProfile: Profile = {
           // Assuming the backend returns a profile object
           avatarUri: data.imageUrl || defaultAvatar,
@@ -98,3 +101,5 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 };
 
 export const useAppData = () => useContext(AppDataContext);
+
+export default useAppData;
