@@ -26,7 +26,7 @@ export default function ChooseGameScreen() {
   const initialSelectedFriends = params?.selectedFriends || [];
   const initialSelectedGuilds = params?.selectedGuilds || [];
   const { games, friends: allFriends, guilds: allGuilds } = useAppData();
-  const [ combinedGames, setCombinedGames] = useState<Game[]>([]);
+  const [combinedGames, setCombinedGames] = useState<Game[]>([]);
 
   const [selectedGuilds, setSelectedGuilds] = useState(initialSelectedGuilds);
   const [selectedFriends, setSelectedFriends] = useState(initialSelectedFriends);
@@ -36,7 +36,7 @@ export default function ChooseGameScreen() {
   const [modalVisibleGuild, setModalVisibleGuild] = useState(false);
 
 
-  function getCombinedGames(){
+  function getCombinedGames() {
     const userIds = selectedFriends.map((friend: Friend) => friend.userId);
 
     // Flatten guild members and get unique ones not already in userIds
@@ -48,56 +48,56 @@ export default function ChooseGameScreen() {
 
     userIds.push(...guildMemberIds);
 
-    if(userIds.length > 0){
+    if (userIds.length > 0) {
       setGameData(userIds)
     } else {
       setCombinedGames(games)
     }
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     getCombinedGames();
-  },[])
+  }, [])
 
-  useEffect(()=>{
+  useEffect(() => {
     getCombinedGames()
-  },[selectedFriends, selectedGuilds])
+  }, [selectedFriends, selectedGuilds])
 
   async function setGameData(userIds: string[]) {
-  if (userIds.length === 0) return;
-  try {
-    // Fetch user data
-    const users = await getUsers(userIds);
+    if (userIds.length === 0) return;
+    try {
+      // Fetch user data
+      const users = await getUsers(userIds);
 
-    // Collect unique game IDs owned by these users
+      // Collect unique game IDs owned by these users
 
-    const combinedGameIds: string[] = (users as User[])
-      .map((user: User) => user.gamesOwned)
-      .reduce((sharedGames: string[], userGames: string[]) => 
-        sharedGames.filter((id: string) => userGames.includes(id))
-      );
+      const combinedGameIds: string[] = (users as User[])
+        .map((user: User) => user.gamesOwned)
+        .reduce((sharedGames: string[], userGames: string[]) =>
+          sharedGames.filter((id: string) => userGames.includes(id))
+        );
 
 
-    // Fetch full game data for these IDs
-    const allGames = await getGames(combinedGameIds);
+      // Fetch full game data for these IDs
+      const allGames = await getGames(combinedGameIds);
 
-    // Map to the expected Game shape (may be unnecessary if getGames already returns full Game objects)
-    const allGameObjects: Game[] = allGames.map((game: Game) => ({
-      gameId: game.gameId,
-      name: game.name,
-      imageUrl: game.imageUrl,
-      rating: game.rating,
-      recommendedPlayers: game.recommendedPlayers,
-      averagePlaytime: game.averagePlaytime,
-      genres: game.genres,
-    }));
+      // Map to the expected Game shape (may be unnecessary if getGames already returns full Game objects)
+      const allGameObjects: Game[] = allGames.map((game: Game) => ({
+        gameId: game.gameId,
+        name: game.name,
+        imageUrl: game.imageUrl,
+        rating: game.rating,
+        recommendedPlayers: game.recommendedPlayers,
+        averagePlaytime: game.averagePlaytime,
+        genres: game.genres,
+      }));
 
-    // Update state
-    setCombinedGames(allGameObjects);
-  } catch (error) {
-    console.error('Error fetching game data:', error);
+      // Update state
+      setCombinedGames(allGameObjects);
+    } catch (error) {
+      console.error('Error fetching game data:', error);
+    }
   }
-}
 
 
   // Animated value for horizontal slide
@@ -108,24 +108,24 @@ export default function ChooseGameScreen() {
   const toggleFriend = (friendId: string) => {
     setSelectedFriends((prev: Friend[]) => {
       if (prev.find((f) => f.userId === friendId)) {
-      return prev.filter((f) => f.userId !== friendId);
+        return prev.filter((f) => f.userId !== friendId);
       } else {
-      const friendToAdd = allFriends.find((f) => f.userId === friendId);
-      return friendToAdd ? [...prev, friendToAdd] : prev;
+        const friendToAdd = allFriends.find((f) => f.userId === friendId);
+        return friendToAdd ? [...prev, friendToAdd] : prev;
       }
     });
   };
 
   const toggleGuild = (guildId: string) => {
-  setSelectedGuilds((prev: Guild[]) => {
-    if (prev.find((g) => g.guildId === guildId)) {
-      return prev.filter((g) => g.guildId !== guildId);
-    } else {
-      const guildToAdd = allGuilds.find((g) => g.guildId === guildId);
-      return guildToAdd ? [...prev, guildToAdd] : prev;
-    }
-  });
-};
+    setSelectedGuilds((prev: Guild[]) => {
+      if (prev.find((g) => g.guildId === guildId)) {
+        return prev.filter((g) => g.guildId !== guildId);
+      } else {
+        const guildToAdd = allGuilds.find((g) => g.guildId === guildId);
+        return guildToAdd ? [...prev, guildToAdd] : prev;
+      }
+    });
+  };
 
 
   const handleAnswer = (answer: boolean) => {
@@ -215,9 +215,9 @@ export default function ChooseGameScreen() {
           Playing with:{' '}
           {selectedFriends && selectedFriends.length > 0
             ? selectedFriends
-                .filter((f: Friend) => f.name && f.name.trim() !== '')
-                .map((f: Friend) => f.name)
-                .join(', ')
+              .filter((f: Friend) => f.name && f.name.trim() !== '')
+              .map((f: Friend) => f.name)
+              .join(', ')
             : 'No friends selected'}
         </Text>
 
