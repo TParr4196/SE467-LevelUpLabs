@@ -16,8 +16,10 @@ import { Friend } from '@/types/friend';
 import { friendStyles } from '../styles/playNowStyles';
 import { Game } from '@/types/game';
 import { Guild } from '@/types/guild';
-import { getGames, getUsers } from '@/utils/api';
+import { getGames, getUsers, voteForGame, getSessionDetails } from '@/utils/api';
 import { User } from '@/types/user';
+import { createSession } from '@/utils/api'; // Make sure this import exists
+import { DEFAULT_USER_ID } from '@/utils/constants'; // Ensure this constant is defined in your constants file
 
 const { width } = Dimensions.get('window');
 
@@ -34,6 +36,12 @@ export default function ChooseGameScreen() {
   const [answers, setAnswers] = useState<{ [gameId: string]: boolean }>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisibleGuild, setModalVisibleGuild] = useState(false);
+  const [showCreateSession, setShowCreateSession] = useState(true);
+  const [creatingSession, setCreatingSession] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [votingComplete, setVotingComplete] = useState(false);
+  const [votedGamesModalVisible, setVotedGamesModalVisible] = useState(false);
+  const [sessionDetails, setSessionDetails] = useState<any>(null);
 
 
   function getCombinedGames() {
@@ -150,9 +158,70 @@ export default function ChooseGameScreen() {
       if (currentGameIndex < combinedGames.length - 1) {
         setCurrentGameIndex(currentGameIndex + 1);
       } else {
-        alert('All games answered!');
+        setVotingComplete(true); // <-- Mark voting as complete
       }
     });
+  };
+
+  const handleCreateSession = async (gameIdsOverride?: string[]) => {
+    const gameIds = gameIdsOverride || combinedGames.map(g => g.gameId);
+    const userIds = [
+      DEFAULT_USER_ID,
+      ...selectedFriends
+        .map(f => f.userId)
+        .filter(id => id !== DEFAULT_USER_ID)
+    ];
+
+    if (!gameIds.length || !userIds.length) {
+      alert('Please select at least one game before creating a session.');
+      setCreatingSession(false);
+      return;
+    }
+
+    setCreatingSession(true);
+    try {
+      const result = await createSession({ gameIds, userIds });
+      const sessionId = result.sessionId || (result.session && result.session.sessionId);
+      if (!sessionId) {
+        alert('Session creation failed: No sessionId returned.');
+        setCreatingSession(false);
+        return;
+      }
+      setSessionId(sessionId);
+
+      // Vote for each game that received a "Yes"
+      for (const gameId of gameIds) {
+        try {
+          await voteForGame(sessionId, gameId);
+        } catch (error: any) {
+          if (error.response) {
+            console.error('Status:', error.response.status);
+            console.error('Message:', error.response.data);
+          } else {
+            console.error('Vote failed:', error.message);
+          }
+        }
+      }
+
+      // Fetch session details AFTER voting
+      try {
+        const details = await getSessionDetails(sessionId);
+        setSessionDetails(details);
+        console.log('Session details:', details);
+      } catch (err) {
+        console.error('Failed to fetch session details:', err);
+      }
+
+      setShowCreateSession(false);
+    } catch (e) {
+      if (e.response) {
+        alert(`Failed to create session: ${e.response.data}`);
+      } else {
+        alert(`Failed to create session: ${e.message}`);
+      }
+    } finally {
+      setCreatingSession(false);
+    }
   };
 
   const renderFriendItem = ({ item }: { item: any }) => {
@@ -185,101 +254,258 @@ export default function ChooseGameScreen() {
   };
 
 
+  const votedGames =
+    sessionDetails && sessionDetails.gameIds
+      ? combinedGames
+          .filter(g => sessionDetails.gameIds[g.gameId]?.votes > 0)
+          .map(g => ({
+            ...g,
+            votes: sessionDetails.gameIds[g.gameId].votes
+          }))
+          .sort((a, b) => b.votes - a.votes)
+      : [];
+
+  const longestNameLength = votedGames.reduce(
+    (max, g) => Math.max(max, g.name.length),
+    0
+  );
+
+  // You can tweak this multiplier for padding/spacing
+  const nameColumnWidth = Math.max(120, longestNameLength * 10);
+
+
   return (
     <View style={[styles.container, { backgroundColor: '#111', padding: 20, flex: 1 }]}>
-      {/* Top: Select Friends */}
-      <TouchableOpacity onPress={() => setModalVisible(true)} style={[friendStyles.selectFriendsButton, { marginBottom: 10 }]}>
-        <Text style={{ color: 'white', fontSize: 16 }}>
-          Select Friends ({selectedFriends.length})
-        </Text>
-      </TouchableOpacity>
+      {/* Voting Complete Modal */}
+      {votingComplete && (
+        <Modal visible={votingComplete} transparent animationType="fade">
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <View style={{
+              backgroundColor: '#222',
+              padding: 30,
+              borderRadius: 16,
+              alignItems: 'center'
+            }}>
+              <Text style={{ color: 'white', fontSize: 22, marginBottom: 20 }}>Ready to Create Session?</Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#2ecc71',
+                  paddingVertical: 12,
+                  paddingHorizontal: 30,
+                  borderRadius: 8,
+                  marginBottom: 10,
+                  opacity: creatingSession ? 0.5 : 1
+                }}
+                onPress={async () => {
+                  // Only include games with a "Yes" vote
+                  const yesGameIds = Object.entries(answers)
+                    .filter(([_, v]) => v)
+                    .map(([id]) => id);
+                  await handleCreateSession(yesGameIds);
+                  setVotingComplete(false);
+                }}
+                disabled={creatingSession}
+              >
+                <Text style={{ color: 'white', fontSize: 18 }}>
+                  {creatingSession ? 'Creating...' : 'Create Session'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
 
-      {/* Middle: Animated Game View */}
-      <Animated.View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          transform: [{ translateX: slideAnim }],
-        }}
-      >
-        <Image
-          source={{ uri: currentGame?.imageUrl }}
-          style={{ width: 300, height: 300, marginBottom: 20 }}
-          resizeMode="contain"
-        />
-        <Text style={{ color: 'white', fontSize: 28, fontWeight: 'bold', textAlign: 'center' }}>
-          {currentGame?.name}
-        </Text>
-        <Text style={{ color: 'gray', marginVertical: 10, textAlign: 'center' }}>
-          Playing with:{' '}
-          {selectedFriends && selectedFriends.length > 0
-            ? selectedFriends
-              .filter((f: Friend) => f.name && f.name.trim() !== '')
-              .map((f: Friend) => f.name)
-              .join(', ')
-            : 'No friends selected'}
-        </Text>
+      {/* Always show the main UI */}
+      <>
+        {/* Top: Select Friends */}
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={[friendStyles.selectFriendsButton, { marginBottom: 10 }]}>
+          <Text style={{ color: 'white', fontSize: 16 }}>
+            Select Friends ({selectedFriends.length})
+          </Text>
+        </TouchableOpacity>
 
-        <View style={{ flexDirection: 'row', marginTop: 30 }}>
-          <TouchableOpacity
-            onPress={() => handleAnswer(false)}
-            style={[friendStyles.answerButton, { backgroundColor: 'crimson' }]}
-          >
-            <Text style={{ color: 'white', fontSize: 20 }}>No</Text>
-          </TouchableOpacity>
+        {/* Middle: Animated Game View */}
+        <Animated.View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            transform: [{ translateX: slideAnim }],
+          }}
+        >
+          <Image
+            source={{ uri: currentGame?.imageUrl }}
+            style={{ width: 300, height: 300, marginBottom: 20 }}
+            resizeMode="contain"
+          />
+          <Text style={{ color: 'white', fontSize: 28, fontWeight: 'bold', textAlign: 'center' }}>
+            {currentGame?.name}
+          </Text>
+          <Text style={{ color: 'gray', marginVertical: 10, textAlign: 'center' }}>
+            Playing with:{' '}
+            {selectedFriends && selectedFriends.length > 0
+              ? selectedFriends
+                .filter((f: Friend) => f.name && f.name.trim() !== '')
+                .map((f: Friend) => f.name)
+                .join(', ')
+              : 'No friends selected'}
+          </Text>
 
-          <TouchableOpacity
-            onPress={() => handleAnswer(true)}
-            style={[friendStyles.answerButton, { backgroundColor: 'limegreen' }]}
-          >
-            <Text style={{ color: 'white', fontSize: 20 }}>Yes</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
+          <View style={{ flexDirection: 'row', marginTop: 30 }}>
+            <TouchableOpacity
+              onPress={() => handleAnswer(false)}
+              style={[friendStyles.answerButton, { backgroundColor: 'crimson' }]}
+            >
+              <Text style={{ color: 'white', fontSize: 20 }}>No</Text>
+            </TouchableOpacity>
 
-      {/* Bottom: Select Guilds */}
-      <TouchableOpacity onPress={() => setModalVisibleGuild(true)} style={[friendStyles.selectFriendsButton, { marginTop: 10 }]}>
-        <Text style={{ color: 'white', fontSize: 16 }}>
-          Select Guilds ({selectedGuilds.length})
-        </Text>
-      </TouchableOpacity>
-
-      {/* Friend Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={friendStyles.modalOverlay}>
-          <View style={friendStyles.modalContent}>
-            <Text style={[styles.title, { marginBottom: 10, color: 'white' }]}>Select Friends</Text>
-            <FlatList
-              data={allFriends}
-              keyExtractor={(item) => item.userId}
-              renderItem={renderFriendItem}
-              contentContainerStyle={{ paddingBottom: 20 }}
-            />
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={friendStyles.closeModalButton}>
-              <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
+            <TouchableOpacity
+              onPress={() => handleAnswer(true)}
+              style={[friendStyles.answerButton, { backgroundColor: 'limegreen' }]}
+            >
+              <Text style={{ color: 'white', fontSize: 20 }}>Yes</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        </Animated.View>
 
-      {/* Guild Modal */}
-      <Modal visible={modalVisibleGuild} animationType="slide" transparent={true}>
-        <View style={friendStyles.modalOverlay}>
-          <View style={friendStyles.modalContent}>
-            <Text style={[styles.title, { marginBottom: 10, color: 'white' }]}>Select Guilds</Text>
-            <FlatList
-              data={allGuilds}
-              keyExtractor={(item) => item.guildId}
-              renderItem={renderGuildItem}
-              contentContainerStyle={{ paddingBottom: 20 }}
-            />
-            <TouchableOpacity onPress={() => setModalVisibleGuild(false)} style={friendStyles.closeModalButton}>
-              <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
-            </TouchableOpacity>
+        {/* Bottom: Select Guilds */}
+        {/* View Voted Games Button */}
+        <TouchableOpacity
+          onPress={() => setVotedGamesModalVisible(true)}
+          style={[friendStyles.selectFriendsButton, { marginTop: 10, marginBottom: 0 }]}
+        >
+          <Text style={{ color: 'white', fontSize: 16 }}>
+            View Voted Games
+          </Text>
+        </TouchableOpacity>
+
+        {/* Select Guilds Button */}
+        <TouchableOpacity onPress={() => setModalVisibleGuild(true)} style={[friendStyles.selectFriendsButton, { marginTop: 10 }]}>
+          <Text style={{ color: 'white', fontSize: 16 }}>
+            Select Guilds ({selectedGuilds.length})
+          </Text>
+        </TouchableOpacity>
+
+        {/* Voted Games Modal */}
+        <Modal
+          visible={votedGamesModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setVotedGamesModalVisible(false)}
+        >
+          <View style={friendStyles.modalOverlay}>
+            <View style={friendStyles.modalContent}>
+              <Text style={[styles.title, { marginBottom: 10, color: 'white' }]}>Voted Games</Text>
+              {/* Table Header */}
+              <View style={{ flexDirection: 'row', paddingHorizontal: 10, paddingTop: 10, paddingBottom: 4 }}>
+                <Text
+                  style={{
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: 16,
+                    fontFamily: 'monospace',
+                    width: nameColumnWidth,
+                  }}
+                >
+                  Game
+                </Text>
+                <Text
+                  style={{
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: 16,
+                    fontFamily: 'monospace',
+                    marginLeft: 8,
+                    minWidth: 32,
+                    textAlign: 'left',
+                  }}
+                >
+                  Votes
+                </Text>
+              </View>
+              <FlatList
+                data={votedGames}
+                keyExtractor={(item) => item.gameId}
+                renderItem={({ item }) => (
+                  <View style={{ paddingVertical: 8, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center' }}>
+                    <Text
+                      style={{
+                        color: 'white',
+                        fontSize: 16,
+                        fontFamily: 'monospace',
+                        width: nameColumnWidth,
+                      }}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {item.name}
+                    </Text>
+                    <Text
+                      style={{
+                        color: 'limegreen',
+                        fontSize: 16,
+                        fontFamily: 'monospace',
+                        marginLeft: 8,
+                        minWidth: 32,
+                        textAlign: 'left',
+                      }}
+                    >
+                      {item.votes}
+                    </Text>
+                  </View>
+                )}
+                ListEmptyComponent={
+                  <Text style={{ color: 'gray', textAlign: 'center' }}>No games have received a "Yes" vote yet.</Text>
+                }
+              />
+              <TouchableOpacity onPress={() => setVotedGamesModalVisible(false)} style={friendStyles.closeModalButton}>
+                <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+
+        {/* Friend Modal */}
+        <Modal visible={modalVisible} animationType="slide" transparent={true}>
+          <View style={friendStyles.modalOverlay}>
+            <View style={friendStyles.modalContent}>
+              <Text style={[styles.title, { marginBottom: 10, color: 'white' }]}>Select Friends</Text>
+              <FlatList
+                data={allFriends}
+                keyExtractor={(item) => item.userId}
+                renderItem={renderFriendItem}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              />
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={friendStyles.closeModalButton}>
+                <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Guild Modal */}
+        <Modal visible={modalVisibleGuild} animationType="slide" transparent={true}>
+          <View style={friendStyles.modalOverlay}>
+            <View style={friendStyles.modalContent}>
+              <Text style={[styles.title, { marginBottom: 10, color: 'white' }]}>Select Guilds</Text>
+              <FlatList
+                data={allGuilds}
+                keyExtractor={(item) => item.guildId}
+                renderItem={renderGuildItem}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              />
+              <TouchableOpacity onPress={() => setModalVisibleGuild(false)} style={friendStyles.closeModalButton}>
+                <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </>
     </View>
   );
 }
