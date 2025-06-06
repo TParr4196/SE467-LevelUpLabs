@@ -348,13 +348,16 @@ export default function ChooseGameScreen() {
           </Text>
           <Text style={{ color: 'gray', marginVertical: 10, textAlign: 'center' }}>
             Playing with:{' '}
-            {selectedFriends && selectedFriends.length > 0
-              ? selectedFriends
+            {[
+              ...selectedFriends
                 .filter((f: Friend) => f.name && f.name.trim() !== '')
-                .map((f: Friend) => f.name)
-                .join(', ')
-              : 'No friends selected'}
+                .map((f: Friend) => f.name),
+              ...selectedGuilds
+                .filter((g: Guild) => g.name && g.name.trim() !== '')
+                .map((g: Guild) => g.name)
+            ].join(', ') || 'No players selected'}
           </Text>
+
 
           <View style={{ flexDirection: 'row', marginTop: 30 }}>
             <TouchableOpacity
