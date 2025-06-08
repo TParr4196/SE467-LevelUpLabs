@@ -39,9 +39,20 @@ export default function ChooseGameScreen() {
   const [showCreateSession, setShowCreateSession] = useState(true);
   const [creatingSession, setCreatingSession] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [mockVotes, setMockVotes] = useState<{ [gameId: string]: number }>({});
   const [votingComplete, setVotingComplete] = useState(false);
   const [votedGamesModalVisible, setVotedGamesModalVisible] = useState(false);
   const [sessionDetails, setSessionDetails] = useState<any>(null);
+
+  useEffect(() => {
+    if (!sessionDetails && combinedGames.length > 0 && Object.keys(mockVotes).length === 0) {
+      const randomVotes: { [gameId: string]: number } = {};
+      combinedGames.forEach(game => {
+        randomVotes[game.gameId] = Math.floor(Math.random() * 4) + 1; // 1 to 4
+      });
+      setMockVotes(randomVotes);
+    }
+  }, [combinedGames, sessionDetails, mockVotes]);
 
 
   function getCombinedGames() {
@@ -168,8 +179,8 @@ export default function ChooseGameScreen() {
     const userIds = [
       DEFAULT_USER_ID,
       ...selectedFriends
-        .map(f => f.userId)
-        .filter(id => id !== DEFAULT_USER_ID)
+        .map((f: Friend) => f.userId)
+        .filter((id: string) => id !== DEFAULT_USER_ID)
     ];
 
     if (!gameIds.length || !userIds.length) {
@@ -254,16 +265,18 @@ export default function ChooseGameScreen() {
   };
 
 
-  const votedGames =
-    sessionDetails && sessionDetails.gameIds
-      ? combinedGames
-          .filter(g => sessionDetails.gameIds[g.gameId]?.votes > 0)
-          .map(g => ({
-            ...g,
-            votes: sessionDetails.gameIds[g.gameId].votes
-          }))
-          .sort((a, b) => b.votes - a.votes)
-      : [];
+  const votedGames = combinedGames
+    .map(g => {
+      const sessionVotes = sessionDetails?.gameIds?.[g.gameId]?.votes ?? 0;
+      const mockVoteCount = mockVotes?.[g.gameId] ?? 0;
+      return {
+        ...g,
+        votes: sessionVotes + mockVoteCount
+      };
+    })
+    .sort((a, b) => b.votes - a.votes);
+
+
 
   const longestNameLength = votedGames.reduce(
     (max, g) => Math.max(max, g.name.length),
