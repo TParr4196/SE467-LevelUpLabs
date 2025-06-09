@@ -1,7 +1,7 @@
 // run with `npx ts-node tests/sessions/testGetSessionDetails.ts`
 import { getSessionDetails } from '../../utils/api';
 
-const TEST_SESSION_ID = '16ae9710-8c48-4371-a9d4-cd59a9a59f5c';
+const TEST_SESSION_ID = '1ffbdf5c-7dad-4415-9b6a-0e9126331f58';
 
 (async () => {
   try {
