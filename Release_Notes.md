@@ -1,10 +1,36 @@
 # Release Notes
-
+http://leveluplabs-turbine.s3-website.us-east-2.amazonaws.com/
 > Documenting updates, features, bug fixes, and known issues for this repository.
 
 ---
 
-## Version: v1.0.0  
+## [0.8.0](https://github.com/TParr4196/SE467-LevelUpLabs/tree/main) (2025-06-09)
+
+> Release of Guilds and Sessions 
+
+### Upgrade Steps
+* No steps required for a user to upgrade their version of the application, as it is deployed to the most recent version.
+
+### Breaking Changes
+* Currently unable to create a new user. The one displayed on the web application is the default user.
+* Only one session exist right now. 
+
+### New Features
+* Added the swipping sessions "Play Now" tab. Here a user can vote on which games they want to play with friends. 
+* Added guild and friends to the "Friends" tab. Here a user can connect with other users either individualy as friends, or in a large group as a guild.
+
+### Bug Fixes
+* Friends are directly connected to the signed in user, instead of being default friends.
+* UI colouring is now more branded across the screens
+
+### Performance Improvements
+* Faster wait-times from data being recieved from the backend, by reducing the amount of times the backend has to be queryed.
+
+### Other Changes
+* Various UI changes to display friends / games in more structured ways.
+
+
+## Version: v0.6.0  
 **Release Date:** May-4-2025
 
 ---
